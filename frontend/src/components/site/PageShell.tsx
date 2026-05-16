@@ -3,14 +3,16 @@ import { Navbar } from "@/components/site/Navbar";
 import { Footer } from "@/components/site/Footer";
 import { CursorGlow } from "@/components/site/CursorGlow";
 import { ScrollProgress } from "@/components/site/ScrollProgress";
+import { OffersStrip } from "@/components/site/OffersStrip";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <ScrollProgress />
       <CursorGlow />
-      <Navbar />
-      <main className="relative z-10 pt-32">{children}</main>
+      <OffersStrip />
+      <Navbar withOfferStrip />
+      <main className="relative z-10 pt-40">{children}</main>
       <Footer />
     </div>
   );

@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 240 8% 8%;
+  --foreground: 0 0% 98%;
+  --card: 240 10% 12%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 10% 22%;
+  --muted: 240 10% 16%;
+  --muted-foreground: 240 7% 70%;
+  --accent: 180 100% 60%;
+  --accent-foreground: 240 10% 10%;
+  --primary: 290 90% 60%;
+  --primary-foreground: 0 0% 98%;
+  --neon-pink: 320 100% 60%;
+  --neon-cyan: 185 100% 62%;
+  --neon-purple: 270 100% 70%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  @apply bg-background text-foreground font-sans;
+  background-image:
+    radial-gradient(80% 60% at 15% 10%, hsl(var(--neon-purple) / 0.12), transparent 55%),
+    radial-gradient(80% 60% at 85% 25%, hsl(var(--neon-cyan) / 0.12), transparent 55%),
+    radial-gradient(120% 80% at 50% 90%, hsl(var(--neon-pink) / 0.1), transparent 60%);
+  min-height: 100vh;
+}
+
+.glass {
+  background: linear-gradient(135deg, hsl(var(--card) / 0.85), hsl(var(--muted) / 0.6));
+  backdrop-filter: blur(18px);
+  border: 1px solid hsl(var(--border));
+}
+
+.neon-ring {
+  box-shadow: 0 0 24px hsl(var(--neon-cyan) / 0.35), 0 0 60px hsl(var(--neon-pink) / 0.2);
+}
+
+.gradient-text {
+  background: linear-gradient(120deg, hsl(var(--neon-cyan)), hsl(var(--neon-pink)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, hsl(var(--muted)) 0%, hsl(var(--card)) 50%, hsl(var(--muted)) 100%);
+  background-size: 200% 100%;
+}

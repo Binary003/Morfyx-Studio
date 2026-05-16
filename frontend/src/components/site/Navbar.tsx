@@ -24,7 +24,7 @@ const links = [
   { label: "Contact", to: "/contact" as const },
 ];
 
-export function Navbar() {
+export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -76,7 +76,7 @@ export function Navbar() {
       initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled ? "py-3" : "py-5"
+      className={`fixed left-0 right-0 ${withOfferStrip ? "top-9" : "top-0"} z-50 transition-all duration-500 ${scrolled ? "py-3" : "py-5"
         }`}
     >
       <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8`}>
