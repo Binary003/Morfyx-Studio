@@ -2,12 +2,12 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
 
 export function RequireAuth({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated } = useAuthStore();
-  const location = useLocation();
+    const { isAuthenticated } = useAuthStore();
+    const location = useLocation();
 
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
-  }
+    if (!isAuthenticated) {
+        return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+    }
 
-  return <>{children}</>;
+    return <>{children}</>;
 }

@@ -18,33 +18,33 @@ import { LoginPage } from "./pages/Login";
 import { ProductFormPage } from "./pages/ProductForm";
 
 export const router = createBrowserRouter([
-  {
-    path: "/login",
-    element: <LoginPage />,
-  },
-  {
-    path: "/",
-    element: (
-      <RequireAuth>
-        <AdminLayout />
-      </RequireAuth>
-    ),
-    children: [
-      { index: true, element: <DashboardPage /> },
-      { path: "products", element: <ProductsPage /> },
-      { path: "products/new", element: <ProductFormPage /> },
-      { path: "products/:id", element: <ProductFormPage /> },
-      { path: "imported-products", element: <ImportedProductsPage /> },
-      { path: "categories", element: <CategoriesPage /> },
-      { path: "orders", element: <OrdersPage /> },
-      { path: "customers", element: <CustomersPage /> },
-      { path: "inventory", element: <InventoryPage /> },
-      { path: "offers", element: <OffersPage /> },
-      { path: "analytics", element: <AnalyticsPage /> },
-      { path: "reviews", element: <ReviewsPage /> },
-      { path: "notifications", element: <NotificationsPage /> },
-      { path: "settings", element: <SettingsPage /> },
-      { path: "profile", element: <ProfilePage /> },
-    ],
-  },
+    {
+        path: "/login",
+        element: <LoginPage />,
+    },
+    {
+        path: "/",
+        element: (
+            <RequireAuth>
+                <AdminLayout />
+            </RequireAuth>
+        ),
+        children: [
+            { index: true, element: <DashboardPage /> },
+            { path: "products", element: <ProductsPage /> },
+            { path: "products/new", element: <ProductFormPage /> },
+            { path: "products/:id", element: <ProductFormPage /> },
+            { path: "imported-products", element: <ImportedProductsPage /> },
+            { path: "categories", element: <CategoriesPage /> },
+            { path: "orders", element: <OrdersPage /> },
+            { path: "customers", element: <CustomersPage /> },
+            { path: "inventory", element: <InventoryPage /> },
+            { path: "offers", element: <OffersPage /> },
+            { path: "analytics", element: <AnalyticsPage /> },
+            { path: "reviews", element: <ReviewsPage /> },
+            { path: "notifications", element: <NotificationsPage /> },
+            { path: "settings", element: <SettingsPage /> },
+            { path: "profile", element: <ProfilePage /> },
+        ],
+    },
 ]);
