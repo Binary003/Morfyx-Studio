@@ -41,8 +41,8 @@ export function Hero() {
             transition={{ duration: 0.7, delay: 0.3 }}
             className="mt-6 text-lg text-muted-foreground max-w-xl"
           >
-            Premium anime figures, imported Japanese collectibles & bespoke
-            custom statues — forged for true otaku, shipped worldwide.
+            Premium anime figures, official imports, and bespoke
+            custom statues — crafted in India and shipped across the country.
           </motion.p>
 
           <motion.div
@@ -76,7 +76,7 @@ export function Hero() {
             {[
               { v: "12K+", l: "Collectors" },
               { v: "850+", l: "Figures" },
-              { v: "60+", l: "Countries" },
+              { v: "60+", l: "Cities" },
             ].map((s) => (
               <div key={s.l}>
                 <div className="font-display text-3xl font-bold text-gradient-neon">{s.v}</div>

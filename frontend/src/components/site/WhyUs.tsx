@@ -16,9 +16,9 @@ export function WhyUs() {
     <section className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHead
-          eyebrow="Why OtakuForge"
+          eyebrow="Why Morfyx Studio"
           title="Built for true collectors"
-          desc="Six reasons our figures end up in display cases, not boxes."
+          desc="Six reasons collectors across India trust our studio."
         />
 
         <div className="mt-16 grid sm:grid-cols-2 lg:grid-cols-3 gap-5">

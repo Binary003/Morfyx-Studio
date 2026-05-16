@@ -7,9 +7,9 @@ import { Wand2, Brush, Box, MessageCircle } from "lucide-react";
 export const Route = createFileRoute("/custom")({
   head: () => ({
     meta: [
-      { title: "Custom Anime Figures — OtakuForge 3D" },
+      { title: "Custom Anime Figures — Morfyx Studio" },
       { name: "description", content: "Commission a bespoke anime figure. Any character, any pose — sculpted, printed and hand-painted by our master artisans." },
-      { property: "og:title", content: "Custom Figures — OtakuForge 3D" },
+      { property: "og:title", content: "Custom Figures — Morfyx Studio" },
       { property: "og:description", content: "Commission a bespoke anime figure built to your specs." },
     ],
   }),

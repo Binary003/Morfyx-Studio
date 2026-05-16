@@ -5,9 +5,9 @@ import { Mail, MapPin, MessageCircle } from "lucide-react";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "Contact — OtakuForge 3D" },
-      { name: "description", content: "Get in touch with the OtakuForge 3D collector concierge." },
-      { property: "og:title", content: "Contact — OtakuForge 3D" },
+      { title: "Contact — Morfyx Studio" },
+      { name: "description", content: "Get in touch with the Morfyx Studio team in India." },
+      { property: "og:title", content: "Contact — Morfyx Studio" },
       { property: "og:description", content: "Get in touch with our collector concierge." },
     ],
   }),
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/contact")({
 function ContactPage() {
   return (
     <PageShell>
-      <PageHero eyebrow="Contact" title="Talk to our collector concierge" desc="We reply within 24 hours. For custom commissions, message us on WhatsApp." />
+      <PageHero eyebrow="Contact" title="Talk to our studio team" desc="We reply within 24 hours. For custom commissions, message us on WhatsApp." />
       <section className="py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 grid lg:grid-cols-[1.2fr_1fr] gap-8">
           <form onSubmit={(e) => e.preventDefault()} className="glass neon-border rounded-3xl p-8 flex flex-col gap-4">
@@ -34,9 +34,9 @@ function ContactPage() {
 
           <div className="flex flex-col gap-4">
             {[
-              { icon: Mail, t: "Email", d: "concierge@otakuforge.com" },
+              { icon: Mail, t: "Email", d: "hello@morfyxstudio.in" },
               { icon: MessageCircle, t: "WhatsApp", d: "+91 99999 99999" },
-              { icon: MapPin, t: "Studio", d: "Shibuya, Tokyo · Japan" },
+              { icon: MapPin, t: "Studio", d: "India · Single studio" },
             ].map((c) => (
               <div key={c.t} className="glass rounded-2xl p-6 flex gap-4 items-start hover:glow-pink transition">
                 <div className="h-12 w-12 shrink-0 rounded-xl bg-[var(--gradient-neon)] grid place-items-center text-primary-foreground glow-pink">

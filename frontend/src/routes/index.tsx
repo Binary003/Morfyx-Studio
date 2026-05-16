@@ -3,7 +3,7 @@ import { Navbar } from "@/components/site/Navbar";
 import { Hero } from "@/components/site/Hero";
 import { Marquee } from "@/components/site/Marquee";
 import { Collections } from "@/components/site/Collections";
-import { Trending } from "@/components/site/Trending";
+import { ProductsSection } from "@/components/site/ProductsSection";
 import { LimitedEdition } from "@/components/site/LimitedEdition";
 import { ImportedCollection } from "@/components/site/ImportedCollection";
 import { FeaturedCarousel } from "@/components/site/FeaturedCarousel";
@@ -13,20 +13,23 @@ import { Testimonials } from "@/components/site/Testimonials";
 import { Footer } from "@/components/site/Footer";
 import { CursorGlow } from "@/components/site/CursorGlow";
 import { ScrollProgress } from "@/components/site/ScrollProgress";
+import { useState } from "react";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "OtakuForge 3D — Premium Anime Figures & Custom Collectibles" },
-      { name: "description", content: "Premium anime figures, imported Japanese collectibles & custom commissioned statues. Hand-painted, collector-grade, shipped worldwide." },
-      { property: "og:title", content: "OtakuForge 3D — Premium Anime Figures" },
-      { property: "og:description", content: "Bring your anime universe to reality with collector-grade resin figures and bespoke custom commissions." },
+      { title: "Morfyx Studio — Premium Anime Figures & Custom Collectibles" },
+      { name: "description", content: "Premium anime figures, official imports, and custom commissions. Hand-painted, collector-grade, shipped across India." },
+      { property: "og:title", content: "Morfyx Studio — Premium Anime Figures" },
+      { property: "og:description", content: "Bring your anime universe to reality with collector-grade resin figures and custom commissions crafted in India." },
     ],
   }),
   component: Index,
 });
 
 function Index() {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
   return (
     <div className="relative min-h-screen overflow-x-hidden">
       <ScrollProgress />
@@ -35,9 +38,16 @@ function Index() {
       <main className="relative z-10">
         <Hero />
         <Marquee />
-        <Collections />
+        <Collections onSelectCategory={setActiveCategory} />
+        <ProductsSection
+          eyebrow="Products"
+          title="Collector favorites"
+          desc="Tap a figure to see full details, pricing, and add it to your cart."
+          limit={4}
+          activeCategory={activeCategory}
+          onClearCategory={() => setActiveCategory(null)}
+        />
         <LimitedEdition />
-        <Trending />
         <ImportedCollection />
         <FeaturedCarousel />
         <Showcase3D />

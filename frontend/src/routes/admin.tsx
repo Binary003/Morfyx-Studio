@@ -5,8 +5,8 @@ import { Package, Upload, MessageSquare, BarChart3, ArrowRight } from "lucide-re
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin Dashboard — OtakuForge 3D" },
-      { name: "description", content: "OtakuForge 3D admin control center (placeholder)." },
+      { title: "Admin Dashboard — Morfyx Studio" },
+      { name: "description", content: "Morfyx Studio admin control center (placeholder)." },
     ],
   }),
   component: AdminPage,
@@ -29,7 +29,7 @@ const tiles = [
 function AdminPage() {
   return (
     <PageShell>
-      <PageHero eyebrow="Admin" title="OtakuForge control center" desc="Placeholder admin UI — order management, products, enquiries & analytics." />
+      <PageHero eyebrow="Admin" title="Morfyx Studio control center" desc="Placeholder admin UI — order management, products, enquiries & analytics." />
 
       <section className="py-12">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 grid grid-cols-2 lg:grid-cols-4 gap-4">

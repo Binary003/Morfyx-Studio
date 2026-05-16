@@ -27,7 +27,7 @@ export function Footer() {
             <input
               type="email"
               required
-              placeholder="you@otaku.world"
+              placeholder="you@morfyxstudio.in"
               className="flex-1 bg-secondary/40 border border-border rounded-xl px-4 py-3.5 outline-none focus:border-accent"
             />
             <button className="inline-flex items-center gap-2 rounded-xl bg-[var(--gradient-neon)] px-5 py-3.5 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
@@ -39,14 +39,14 @@ export function Footer() {
         <div className="mt-16 grid grid-cols-2 lg:grid-cols-6 gap-10">
           <div className="col-span-2">
             <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-[var(--gradient-neon)] grid place-items-center font-bold text-primary-foreground glow-pink">O</div>
+              <div className="h-10 w-10 rounded-xl bg-[var(--gradient-neon)] grid place-items-center font-bold text-primary-foreground glow-pink">M</div>
               <div>
-                <div className="font-display text-xl font-bold">Otaku<span className="text-gradient-neon">Forge</span></div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">3D Studio</div>
+                <div className="font-display text-xl font-bold">Morfyx <span className="text-gradient-neon">Studio</span></div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">India Studio</div>
               </div>
             </div>
             <p className="text-sm text-muted-foreground mt-4 max-w-sm">
-              Premium anime figures and custom 3D collectibles forged for true otaku — shipped worldwide from our Tokyo studio.
+              Premium anime figures and custom 3D collectibles crafted in India — shipped across the country from our single studio.
             </p>
             <div className="flex gap-2 mt-6">
               {[Instagram, Twitter, Youtube, MessageCircle].map((Icon, i) => (
@@ -71,7 +71,7 @@ export function Footer() {
         </div>
 
         <div className="mt-14 pt-6 border-t border-border/50 flex flex-col sm:flex-row justify-between gap-3 text-xs text-muted-foreground">
-          <div>© {new Date().getFullYear()} OtakuForge 3D · All rights reserved.</div>
+          <div>© {new Date().getFullYear()} Morfyx Studio · All rights reserved.</div>
           <div className="flex gap-5">
             <a href="#" className="hover:text-foreground">Privacy</a>
             <a href="#" className="hover:text-foreground">Terms</a>

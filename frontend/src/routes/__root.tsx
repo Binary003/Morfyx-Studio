@@ -10,6 +10,8 @@ import {
 
 import appCss from "../styles.css?url";
 import { CustomFigureModalProvider } from "@/components/site/CustomFigureModal";
+import { CartProvider } from "@/lib/cart";
+import { AuthProvider } from "@/lib/auth";
 
 function NotFoundComponent() {
   return (
@@ -117,9 +119,13 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <CustomFigureModalProvider>
-        <Outlet />
-      </CustomFigureModalProvider>
+      <AuthProvider>
+        <CartProvider>
+          <CustomFigureModalProvider>
+            <Outlet />
+          </CustomFigureModalProvider>
+        </CartProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

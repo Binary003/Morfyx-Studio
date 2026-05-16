@@ -17,7 +17,11 @@ const collections = [
   { name: "Jujutsu Kaisen", count: 29, img: jjk, accent: "from-purple-500/40 to-transparent" },
 ];
 
-export function Collections() {
+export function Collections({
+  onSelectCategory,
+}: {
+  onSelectCategory?: (category: string) => void;
+}) {
   const { open } = useCustomFigureModal();
   return (
     <section id="collections" className="relative py-24 sm:py-32">
@@ -30,15 +34,22 @@ export function Collections() {
 
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {collections.map((c, i) => (
-            <motion.a
+            <motion.button
               key={c.name}
-              href="#"
+              type="button"
+              onClick={() => {
+                if (onSelectCategory) {
+                  onSelectCategory(c.name);
+                  document.getElementById("products")?.scrollIntoView({ behavior: "smooth" });
+                }
+              }}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.5, delay: i * 0.07 }}
               whileHover={{ y: -6 }}
-              className="group relative aspect-[4/5] rounded-3xl overflow-hidden glass neon-border"
+              className="group relative aspect-[4/5] rounded-3xl overflow-hidden glass neon-border text-left"
+              aria-label={`Explore ${c.name} collection`}
             >
               <img
                 src={c.img}
@@ -63,7 +74,7 @@ export function Collections() {
                   <p className="text-sm text-muted-foreground mt-1">Explore collection →</p>
                 </div>
               </div>
-            </motion.a>
+            </motion.button>
           ))}
 
           {/* Custom commissions CTA card */}
