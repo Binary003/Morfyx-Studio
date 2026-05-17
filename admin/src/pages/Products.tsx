@@ -27,20 +27,20 @@ export function ProductsPage() {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                
+
                 // Fetch categories
                 const catResponse = await adminApi.getCategories();
                 if (catResponse.success && catResponse.data?.categories) {
                     setCategories(catResponse.data.categories.map((c: any) => c.name));
                 }
-                
+
                 // Fetch products
-                const prodResponse = await adminApi.getProducts({ 
-                    page, 
+                const prodResponse = await adminApi.getProducts({
+                    page,
                     limit: 20,
                     ...(selectedCategory !== "All" && { category: selectedCategory.toLowerCase() })
                 });
-                
+
                 if (prodResponse.success && prodResponse.data?.products) {
                     setProducts(prodResponse.data.products);
                 }
@@ -56,7 +56,7 @@ export function ProductsPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this product?")) return;
-        
+
         try {
             await adminApi.deleteProduct(id);
             setProducts(products.filter(p => p.id !== id));
@@ -86,8 +86,8 @@ export function ProductsPage() {
             <Card className="mt-6">
                 <CardContent className="py-5">
                     <div className="grid gap-3 md:grid-cols-3">
-                        <Input 
-                            placeholder="Search products" 
+                        <Input
+                            placeholder="Search products"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
@@ -162,15 +162,15 @@ export function ProductsPage() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="flex gap-2">
-                                                <Button 
-                                                    size="sm" 
-                                                    variant="outline" 
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
                                                     onClick={() => navigate(`/products/${product.id}`)}
                                                 >
                                                     Edit
                                                 </Button>
-                                                <Button 
-                                                    size="sm" 
+                                                <Button
+                                                    size="sm"
                                                     variant="outline"
                                                     className="text-red-500"
                                                     onClick={() => handleDelete(product.id)}

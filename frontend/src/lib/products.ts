@@ -234,7 +234,7 @@ export function useProducts(type: ProductType = "standard") {
             try {
                 setStatus("loading");
                 const response = await api.getProducts({ limit: 100 });
-                
+
                 if (response.success && response.data?.products) {
                     // Map API response to local Product format
                     const mappedProducts = response.data.products.map((p: ApiProduct) => ({
@@ -247,7 +247,7 @@ export function useProducts(type: ProductType = "standard") {
                         description: p.description,
                         type: "standard" as ProductType,
                     }));
-                    
+
                     setData(mappedProducts);
                     setStatus("success");
                 } else {
@@ -279,7 +279,7 @@ export function useImportedProducts() {
             try {
                 setStatus("loading");
                 const response = await api.getProducts({ limit: 100 });
-                
+
                 if (response.success && response.data?.products) {
                     const mappedProducts = response.data.products.map((p: ApiProduct) => ({
                         id: p.id,
@@ -318,7 +318,7 @@ export function useAllProducts() {
             try {
                 setStatus("loading");
                 const response = await api.getProducts({ limit: 200 });
-                
+
                 if (response.success && response.data?.products) {
                     const mappedProducts = response.data.products.map((p: ApiProduct) => ({
                         id: p.id,
