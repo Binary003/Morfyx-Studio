@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import p1 from "@/assets/prod-1.jpg";
 import p2 from "@/assets/prod-2.jpg";
 import p3 from "@/assets/prod-3.jpg";
 import p4 from "@/assets/prod-4.jpg";
+import { api } from "./api";
 
 export type ProductType = "standard" | "imported";
 
@@ -17,6 +18,16 @@ export type Product = {
     category: string;
     description: string;
     type: ProductType;
+};
+
+export type ApiProduct = {
+    id: string;
+    name: string;
+    price: number;
+    rating?: number;
+    images?: string[];
+    category: string;
+    description: string;
 };
 
 const standardProducts: Product[] = [
@@ -214,20 +225,127 @@ export const importedProductCategories = [
 ];
 
 export function useProducts(type: ProductType = "standard") {
-    // TODO: Replace with API fetch when backend is ready.
-    const data = useMemo(() => {
-        return type === "imported" ? importedProducts : standardProducts;
+    const [data, setData] = useState<Product[]>([]);
+    const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setStatus("loading");
+                const response = await api.getProducts({ limit: 100 });
+                
+                if (response.success && response.data?.products) {
+                    // Map API response to local Product format
+                    const mappedProducts = response.data.products.map((p: ApiProduct) => ({
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        rating: p.rating || 4.5,
+                        img: p.images?.[0] || p1,
+                        category: p.category,
+                        description: p.description,
+                        type: "standard" as ProductType,
+                    }));
+                    
+                    setData(mappedProducts);
+                    setStatus("success");
+                } else {
+                    // Fallback to mock data
+                    setData(type === "imported" ? importedProducts : standardProducts);
+                    setStatus("success");
+                }
+            } catch (err) {
+                console.warn("Failed to fetch products from API, using mock data:", err);
+                // Fallback to mock data on error
+                setData(type === "imported" ? importedProducts : standardProducts);
+                setStatus("success");
+                setError(err instanceof Error ? err.message : "Failed to fetch products");
+            }
+        };
+
+        fetchProducts();
     }, [type]);
-    return { data, status: "success" as const };
+
+    return { data, status, error };
 }
 
 export function useImportedProducts() {
-    return useProducts("imported");
+    const [data, setData] = useState<Product[]>([]);
+    const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setStatus("loading");
+                const response = await api.getProducts({ limit: 100 });
+                
+                if (response.success && response.data?.products) {
+                    const mappedProducts = response.data.products.map((p: ApiProduct) => ({
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        rating: p.rating || 4.5,
+                        img: p.images?.[0] || p1,
+                        category: p.category,
+                        description: p.description,
+                        type: "imported" as ProductType,
+                    }));
+                    setData(mappedProducts);
+                } else {
+                    setData(importedProducts);
+                }
+                setStatus("success");
+            } catch (err) {
+                console.warn("Failed to fetch imported products, using mock data:", err);
+                setData(importedProducts);
+                setStatus("success");
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    return { data, status };
 }
 
 export function useAllProducts() {
-    const data = useMemo(() => [...standardProducts, ...importedProducts], []);
-    return { data, status: "success" as const };
+    const [data, setData] = useState<Product[]>([]);
+    const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            try {
+                setStatus("loading");
+                const response = await api.getProducts({ limit: 200 });
+                
+                if (response.success && response.data?.products) {
+                    const mappedProducts = response.data.products.map((p: ApiProduct) => ({
+                        id: p.id,
+                        name: p.name,
+                        price: p.price,
+                        rating: p.rating || 4.5,
+                        img: p.images?.[0] || p1,
+                        category: p.category,
+                        description: p.description,
+                        type: "standard" as ProductType,
+                    }));
+                    setData(mappedProducts);
+                } else {
+                    setData([...standardProducts, ...importedProducts]);
+                }
+                setStatus("success");
+            } catch (err) {
+                console.warn("Failed to fetch all products, using mock data:", err);
+                setData([...standardProducts, ...importedProducts]);
+                setStatus("success");
+            }
+        };
+
+        fetchProducts();
+    }, []);
+
+    return { data, status };
 }
 
 export function formatPrice(value: number) {
