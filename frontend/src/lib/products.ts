@@ -18,12 +18,14 @@ export type Product = {
     category: string;
     description: string;
     type: ProductType;
-};
+    stock?: number;
+}; // Added stock
 
 export type ApiProduct = {
     id: string;
     name: string;
     price: number;
+    stock: number;
     rating?: number;
     images?: string[];
     category: string;
@@ -235,36 +237,56 @@ export function useProducts(type: ProductType = "standard") {
                 setStatus("loading");
                 const response = await api.getProducts({ limit: 100 });
 
-                if (response.success && response.data?.products) {
+                // Backend returns: { items, total, page, limit, success: true }
+                if (response.data?.items && Array.isArray(response.data.items)) {
                     // Map API response to local Product format
-                    const mappedProducts = response.data.products.map((p: ApiProduct) => ({
-                        id: p.id,
-                        name: p.name,
-                        price: p.price,
-                        rating: p.rating || 4.5,
-                        img: p.images?.[0] || p1,
-                        category: p.category,
-                        description: p.description,
-                        type: "standard" as ProductType,
-                    }));
+                    const filterOrigin = type === "imported" ? "imported" : "local";
+                    const mappedProducts = response.data.items
+                        .filter((p: any) => {
+                            // Treat undefined origin as "local"
+                            const productOrigin = p.origin || "local";
+                            return productOrigin === filterOrigin;
+                        })
+                        .map((p: any) => ({
+                            id: p._id || p.id,
+                            name: p.name,
+                            price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
+                            oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
+                            rating: p.rating || 4.5,
+                            badge: p.badge || (p.featured ? "Featured" : undefined),
+                            img: p.images?.[0]?.url || p.images?.[0] || p1,
+                            category: p.animeCategory?.name || p.category || "General",
+                            description: p.description,
+                            type: type,
+                            stock: p.stock ?? 0,
+                        }));
 
                     setData(mappedProducts);
                     setStatus("success");
                 } else {
-                    // Fallback to mock data
-                    setData(type === "imported" ? importedProducts : standardProducts);
-                    setStatus("success");
+                    throw new Error("Invalid API response format");
                 }
             } catch (err) {
-                console.warn("Failed to fetch products from API, using mock data:", err);
-                // Fallback to mock data on error
-                setData(type === "imported" ? importedProducts : standardProducts);
-                setStatus("success");
-                setError(err instanceof Error ? err.message : "Failed to fetch products");
+                console.error("Failed to fetch products from API:", err);
+                // Use mock data as fallback only in development
+                if (import.meta.env.DEV) {
+                    console.warn("Falling back to mock data");
+                    setData(type === "imported" ? importedProducts : standardProducts);
+                    setStatus("success");
+                } else {
+                    setStatus("error");
+                    setError(err instanceof Error ? err.message : "Failed to fetch products");
+                }
             }
         };
 
+        // Fetch immediately
         fetchProducts();
+
+        // Refetch every 10 seconds for real-time updates from admin
+        const interval = setInterval(fetchProducts, 10000);
+
+        return () => clearInterval(interval);
     }, [type]);
 
     return { data, status, error };
@@ -273,6 +295,7 @@ export function useProducts(type: ProductType = "standard") {
 export function useImportedProducts() {
     const [data, setData] = useState<Product[]>([]);
     const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -280,38 +303,54 @@ export function useImportedProducts() {
                 setStatus("loading");
                 const response = await api.getProducts({ limit: 100 });
 
-                if (response.success && response.data?.products) {
-                    const mappedProducts = response.data.products.map((p: ApiProduct) => ({
-                        id: p.id,
-                        name: p.name,
-                        price: p.price,
-                        rating: p.rating || 4.5,
-                        img: p.images?.[0] || p1,
-                        category: p.category,
-                        description: p.description,
-                        type: "imported" as ProductType,
-                    }));
+                if (response.data?.items && Array.isArray(response.data.items)) {
+                    const mappedProducts = response.data.items
+                        .filter((p: any) => p.origin === "imported")
+                        .map((p: any) => ({
+                            id: p._id || p.id,
+                            name: p.name,
+                            price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
+                            oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
+                            rating: p.rating || 4.5,
+                            badge: p.badge || (p.featured ? "Featured" : undefined),
+                            img: p.images?.[0]?.url || p.images?.[0] || p1,
+                            category: p.animeCategory?.name || p.category || "Imported",
+                            description: p.description,
+                            type: "imported" as ProductType,
+                            stock: p.stock ?? 0,
+                        }));
                     setData(mappedProducts);
+                    setStatus("success");
                 } else {
-                    setData(importedProducts);
+                    throw new Error("Invalid API response format");
                 }
-                setStatus("success");
             } catch (err) {
-                console.warn("Failed to fetch imported products, using mock data:", err);
-                setData(importedProducts);
-                setStatus("success");
+                console.error("Failed to fetch imported products:", err);
+                if (import.meta.env.DEV) {
+                    console.warn("Falling back to mock data");
+                    setData(importedProducts);
+                    setStatus("success");
+                } else {
+                    setStatus("error");
+                    setError(err instanceof Error ? err.message : "Failed to fetch products");
+                }
             }
         };
 
         fetchProducts();
+
+        // Refetch every 10 seconds for real-time updates
+        const interval = setInterval(fetchProducts, 10000);
+        return () => clearInterval(interval);
     }, []);
 
-    return { data, status };
+    return { data, status, error };
 }
 
 export function useAllProducts() {
     const [data, setData] = useState<Product[]>([]);
     const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         const fetchProducts = async () => {
@@ -319,33 +358,46 @@ export function useAllProducts() {
                 setStatus("loading");
                 const response = await api.getProducts({ limit: 200 });
 
-                if (response.success && response.data?.products) {
-                    const mappedProducts = response.data.products.map((p: ApiProduct) => ({
-                        id: p.id,
+                if (response.data?.items && Array.isArray(response.data.items)) {
+                    const mappedProducts = response.data.items.map((p: any) => ({
+                        id: p._id || p.id,
                         name: p.name,
-                        price: p.price,
+                        price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
+                        oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
                         rating: p.rating || 4.5,
-                        img: p.images?.[0] || p1,
-                        category: p.category,
+                        badge: p.badge || (p.featured ? "Featured" : undefined),
+                        img: p.images?.[0]?.url || p.images?.[0] || p1,
+                        category: p.animeCategory?.name || p.category || "General",
                         description: p.description,
-                        type: "standard" as ProductType,
+                        type: (p.origin === "imported" ? "imported" : "standard") as ProductType,
+                        stock: p.stock ?? 0,
                     }));
                     setData(mappedProducts);
+                    setStatus("success");
                 } else {
-                    setData([...standardProducts, ...importedProducts]);
+                    throw new Error("Invalid API response format");
                 }
-                setStatus("success");
             } catch (err) {
-                console.warn("Failed to fetch all products, using mock data:", err);
-                setData([...standardProducts, ...importedProducts]);
-                setStatus("success");
+                console.error("Failed to fetch all products:", err);
+                if (import.meta.env.DEV) {
+                    console.warn("Falling back to mock data");
+                    setData([...standardProducts, ...importedProducts]);
+                    setStatus("success");
+                } else {
+                    setStatus("error");
+                    setError(err instanceof Error ? err.message : "Failed to fetch products");
+                }
             }
         };
 
         fetchProducts();
+
+        // Refetch every 10 seconds for real-time updates
+        const interval = setInterval(fetchProducts, 10000);
+        return () => clearInterval(interval);
     }, []);
 
-    return { data, status };
+    return { data, status, error };
 }
 
 export function formatPrice(value: number) {

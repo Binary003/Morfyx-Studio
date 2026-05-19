@@ -5,12 +5,21 @@ import { Order } from "../models/Order";
 import { ApiError } from "../utils/apiError";
 
 export const createRazorpayOrder = async (amount: number, currency = "INR") => {
-  const order = await razorpay.orders.create({
-    amount: Math.round(amount * 100),
-    currency
-  });
-
-  return order;
+  try {
+    console.log("📋 Calling Razorpay SDK with amount:", amount, "currency:", currency);
+    // Amount is already in paise from frontend, don't multiply again
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount),
+      currency
+    });
+    console.log("✅ Razorpay order created with ID:", order.id);
+    return order;
+  } catch (error: any) {
+    console.error("❌ Razorpay SDK error:", error.message);
+    console.error("❌ Error code:", error.code);
+    console.error("❌ Error description:", error.description);
+    throw error;
+  }
 };
 
 export const verifyRazorpaySignature = (
@@ -49,7 +58,9 @@ export const recordPaymentSuccess = async (payload: any) => {
     razorpaySignature: payload.razorpaySignature
   });
 
-  return order;
+  // Return the fully populated order
+  const populatedOrder = await Order.findById(order._id);
+  return populatedOrder;
 };
 
 export const recordPaymentFailure = async (payload: any) => {

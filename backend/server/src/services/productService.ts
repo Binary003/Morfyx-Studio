@@ -1,5 +1,6 @@
 import slugify from "slugify";
 import { Product } from "../models/Product";
+import { Category } from "../models/Category";
 import { ApiError } from "../utils/apiError";
 import { parsePagination } from "../utils/pagination";
 
@@ -44,14 +45,30 @@ export const listProducts = async (query: any) => {
   const { page, limit, skip } = parsePagination(query);
   const filter: any = {};
 
-  if (query.category) filter.animeCategory = query.category;
+  // Handle category filter by name
+  if (query.category) {
+    const category = await Category.findOne({
+      $or: [
+        { name: { $regex: query.category, $options: "i" } },
+        { slug: query.category }
+      ]
+    });
+    if (category) {
+      filter.animeCategory = category._id;
+    }
+  }
+
   if (query.featured) filter.featured = query.featured === "true";
   if (query.trending) filter.trending = query.trending === "true";
   if (query.status) filter.status = query.status;
   if (query.origin) filter.origin = query.origin;
 
   const [items, total] = await Promise.all([
-    Product.find(filter).skip(skip).limit(limit).sort({ createdAt: -1 }),
+    Product.find(filter)
+      .populate("animeCategory")
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 }),
     Product.countDocuments(filter)
   ]);
 

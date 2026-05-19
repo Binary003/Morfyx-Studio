@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-router";
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import { useAuth } from "@/lib/auth";
+import { api } from "@/lib/api";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
@@ -9,8 +11,99 @@ export const Route = createFileRoute("/orders")({
   component: OrdersPage,
 });
 
+interface Order {
+  _id: string;
+  id?: string;
+  orderNumber?: string;
+  orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+  totalAmount: number;
+  orderedProducts: Array<{ name: string; quantity: number; price: number; image?: string }>;
+  createdAt: string;
+  updatedAt?: string;
+}
+
 function OrdersPage() {
+  const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
+  const search = useSearch({ from: "/orders" });
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(search?.success ? "Payment successful! Your order is being processed." : "");
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate({ to: "/login" });
+      return;
+    }
+
+    // Clear success message after 5 seconds
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 5000);
+      return () => clearTimeout(timer);
+    }
+
+    const fetchOrders = async () => {
+      try {
+        setLoading(true);
+        const response = await api.getOrders({ page: 1, limit: 50 });
+        if (response?.data?.orders || response?.data?.items) {
+          setOrders(response.data.orders || response.data.items);
+        } else if (Array.isArray(response?.data)) {
+          setOrders(response.data);
+        }
+      } catch (err: any) {
+        // Handle case where user has no orders yet
+        if (err.response?.status === 404) {
+          setOrders([]);
+        } else {
+          setError(err.message || "Failed to load orders");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [isAuthenticated, navigate, successMessage]);
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return "text-green-400";
+      case "shipped":
+        return "text-blue-400";
+      case "processing":
+        return "text-yellow-400";
+      case "paid":
+      case "pending":
+        return "text-orange-400";
+      case "cancelled":
+        return "text-red-400";
+      default:
+        return "text-gray-400";
+    }
+  };
+
+  const getStatusBadgeClass = (status: string) => {
+    switch (status) {
+      case "delivered":
+        return "bg-green-500/10 border border-green-500/20";
+      case "shipped":
+        return "bg-blue-500/10 border border-blue-500/20";
+      case "processing":
+        return "bg-yellow-500/10 border border-yellow-500/20";
+      case "paid":
+      case "pending":
+        return "bg-orange-500/10 border border-orange-500/20";
+      case "cancelled":
+        return "bg-red-500/10 border border-red-500/20";
+      default:
+        return "bg-white/5 border border-white/10";
+    }
+  };
+
+  if (!isAuthenticated) return null;
 
   return (
     <PageShell>
@@ -18,46 +111,94 @@ function OrdersPage() {
 
       <section className="pb-24">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-          {!isAuthenticated ? (
+          {successMessage && (
+            <div className="glass neon-border rounded-3xl p-4 mb-6 border-green-500/20 bg-green-500/5">
+              <div className="text-sm text-green-400">✅ {successMessage}</div>
+            </div>
+          )}
+
+          {error && (
+            <div className="glass neon-border rounded-3xl p-4 mb-6 border-red-500/20 bg-red-500/5">
+              <div className="text-sm text-red-500">{error}</div>
+            </div>
+          )}
+
+          {loading ? (
             <div className="glass neon-border rounded-3xl p-8 text-center">
-              <div className="text-lg font-semibold">Please log in to view your orders.</div>
-              <div className="text-sm text-muted-foreground mt-2">We need your account to load order history.</div>
+              <div className="text-lg text-muted-foreground">Loading orders...</div>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="glass neon-border rounded-3xl p-8 text-center">
+              <div className="text-lg font-semibold">No orders yet</div>
+              <div className="text-sm text-muted-foreground mt-2">Start shopping to see your orders here</div>
               <Link
-                to="/login"
+                to="/shop"
                 className="inline-flex items-center justify-center mt-6 rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
               >
-                Log In
+                Browse Products
               </Link>
             </div>
           ) : (
             <div className="glass neon-border rounded-3xl p-8">
-              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Signed in as</div>
-              <div className="text-lg font-semibold mt-2">{user?.name}</div>
+              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6">Signed in as</div>
+              <div className="text-lg font-semibold mb-6">{user?.name}</div>
 
-              <div className="mt-6 overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-muted-foreground uppercase tracking-wider text-[10px]">
-                    <tr><th className="py-3">Order</th><th>Item</th><th>Status</th><th className="text-right">Total</th></tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/40">
-                    {[
-                      ["#20401", "Rem Wedding Ver.", "Delivered", "$429"],
-                      ["#20400", "Kurogane Samurai 1/6", "Shipped", "$289"],
-                      ["#20392", "Domain Expansion Diorama", "Processing", "$529"],
-                    ].map((row, i) => (
-                      <tr key={i}>
-                        {row.map((cell, j) => (
-                          <td key={j} className={`py-3 ${j === 3 ? "text-right font-display text-gradient-neon font-bold" : ""}`}>
-                            {cell}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+              <div className="space-y-4">
+                {orders.map((order) => (
+                  <div key={order._id || order.id} className="border border-white/10 rounded-lg p-6 hover:border-white/20 hover:bg-white/5 transition">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Order ID</div>
+                        <div className="text-sm font-semibold mt-1 font-mono">#{order.orderNumber || order._id?.slice(-6)}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Items</div>
+                        <div className="text-sm font-semibold mt-1">{order.orderedProducts?.length || 0}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Status</div>
+                        <div className={`text-sm font-semibold mt-1 capitalize ${getStatusColor(order.orderStatus || "pending")}`}>{order.orderStatus || "pending"}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</div>
+                        <div className="text-lg font-bold mt-1 text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                      </div>
+                    </div>
+
+                    {order.orderedProducts && order.orderedProducts.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-white/10">
+                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Items</div>
+                        <div className="space-y-2">
+                          {order.orderedProducts.map((item, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">{item?.name || `Product (${item?.quantity || 1}x)`}</span>
+                              <span>₹{((item?.price || 0) * (item?.quantity || 1)).toLocaleString('en-IN')}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                        <div className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusBadgeClass(order.orderStatus)}`}>
+                        {order.orderStatus}
+                      </span>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           )}
+
+          <div className="mt-8">
+            <Link
+              to="/profile"
+              className="inline-flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 px-6 py-3 font-semibold transition"
+            >
+              Back to Profile
+            </Link>
+          </div>
         </div>
       </section>
     </PageShell>

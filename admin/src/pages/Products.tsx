@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { SectionHeader } from "../components/common/SectionHeader";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
@@ -22,36 +22,54 @@ export function ProductsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [categories, setCategories] = useState<string[]>([]);
+    const pageRef = useRef(1);
+    const categoryRef = useRef("All");
+
+    // Update refs when state changes
+    useEffect(() => {
+        pageRef.current = page;
+    }, [page]);
 
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                setLoading(true);
+        categoryRef.current = selectedCategory;
+    }, [selectedCategory]);
 
-                // Fetch categories
-                const catResponse = await adminApi.getCategories();
-                if (catResponse.success && catResponse.data?.categories) {
-                    setCategories(catResponse.data.categories.map((c: any) => c.name));
-                }
+    const fetchData = async (pageNum?: number, category?: string) => {
+        try {
+            setLoading(true);
 
-                // Fetch products
-                const prodResponse = await adminApi.getProducts({
-                    page,
-                    limit: 20,
-                    ...(selectedCategory !== "All" && { category: selectedCategory.toLowerCase() })
-                });
-
-                if (prodResponse.success && prodResponse.data?.products) {
-                    setProducts(prodResponse.data.products);
-                }
-            } catch (error) {
-                console.error("Failed to fetch products:", error);
-            } finally {
-                setLoading(false);
+            // Fetch categories once
+            const catResponse = await adminApi.getCategories();
+            if (catResponse.success && catResponse.data?.categories) {
+                setCategories(catResponse.data.categories.map((c: any) => c.name));
             }
-        };
 
-        fetchData();
+            // Fetch products with current or provided page/category
+            const prodResponse = await adminApi.getProducts({
+                page: pageNum ?? pageRef.current,
+                limit: 20,
+                ...(category !== undefined
+                    ? (category !== "All" && { category: category.toLowerCase() })
+                    : (categoryRef.current !== "All" && { category: categoryRef.current.toLowerCase() })
+                )
+            });
+
+            if (prodResponse.success && prodResponse.data?.items) {
+                setProducts(prodResponse.data.items);
+            } else {
+                setProducts([]);
+            }
+        } catch (error) {
+            console.error("Failed to fetch products:", error);
+            setProducts([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Fetch on initial mount and when page/category changes
+    useEffect(() => {
+        fetchData(page, selectedCategory);
     }, [page, selectedCategory]);
 
     const handleDelete = async (id: string) => {
@@ -59,7 +77,8 @@ export function ProductsPage() {
 
         try {
             await adminApi.deleteProduct(id);
-            setProducts(products.filter(p => p.id !== id));
+            // Refresh the list after deletion
+            await fetchData(pageRef.current, categoryRef.current);
         } catch (error) {
             console.error("Failed to delete product:", error);
             alert("Failed to delete product");

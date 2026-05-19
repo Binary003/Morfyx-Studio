@@ -27,14 +27,17 @@ class ApiClient {
             },
         });
 
+        const data = await response.json().catch(() => ({
+            message: `HTTP ${response.status}`,
+        }));
+
         if (!response.ok) {
-            const error = await response.json().catch(() => ({
-                message: `HTTP ${response.status}`,
-            }));
-            throw new Error(error.message || "API request failed");
+            const error = new Error(data.message || `HTTP ${response.status}`) as any;
+            error.response = { status: response.status, data };
+            throw error;
         }
 
-        return response.json();
+        return data;
     }
 
     // Products
@@ -79,7 +82,7 @@ class ApiClient {
         if (params?.page) query.append("page", params.page.toString());
         if (params?.limit) query.append("limit", params.limit.toString());
 
-        return this.request<any>(`/orders?${query}`);
+        return this.request<any>(`/orders/me?${query}`);
     }
 
     async getOrder(id: string) {
@@ -154,6 +157,10 @@ class ApiClient {
         });
     }
 
+    async getMe() {
+        return this.request("/auth/me");
+    }
+
     // Payments
     async createRazorpayOrder(data: { orderId: string; amount: number }) {
         return this.request("/payments/razorpay/order", {
@@ -166,10 +173,38 @@ class ApiClient {
         razorpayPaymentId: string;
         razorpayOrderId: string;
         razorpaySignature: string;
+        orderId: string;
     }) {
         return this.request("/payments/razorpay/verify", {
             method: "POST",
             body: JSON.stringify(data),
+        });
+    }
+
+    // Generic HTTP methods
+    async post<T = any>(endpoint: string, body?: any): Promise<T> {
+        return this.request<T>(endpoint, {
+            method: "POST",
+            body: body ? JSON.stringify(body) : undefined,
+        });
+    }
+
+    async get<T = any>(endpoint: string): Promise<T> {
+        return this.request<T>(endpoint, {
+            method: "GET",
+        });
+    }
+
+    async put<T = any>(endpoint: string, body?: any): Promise<T> {
+        return this.request<T>(endpoint, {
+            method: "PUT",
+            body: body ? JSON.stringify(body) : undefined,
+        });
+    }
+
+    async delete<T = any>(endpoint: string): Promise<T> {
+        return this.request<T>(endpoint, {
+            method: "DELETE",
         });
     }
 }

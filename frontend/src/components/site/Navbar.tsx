@@ -142,6 +142,10 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
                   <>
                     <div className="px-2 py-1.5 text-xs text-muted-foreground">Signed in as</div>
                     <div className="px-2 pb-2 text-sm font-semibold">{user?.name}</div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/profile">My Profile</Link>
+                    </DropdownMenuItem>
                     <DropdownMenuItem asChild>
                       <Link to="/orders">My Orders</Link>
                     </DropdownMenuItem>

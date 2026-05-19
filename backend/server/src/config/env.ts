@@ -47,9 +47,21 @@ export const env = {
   cloudinarySecret: process.env.CLOUDINARY_SECRET as string,
   razorpayKeyId: process.env.RAZORPAY_KEY_ID as string,
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET as string,
+  // Shiprocket Configuration
+  shiprocketEmail: process.env.SHIPROCKET_EMAIL as string,
+  shiprocketPassword: process.env.SHIPROCKET_PASSWORD as string,
+  shiprocketApiKey: process.env.SHIPROCKET_API_KEY as string,
+  // Payment Configuration
+  advancePaymentPercent: Number(process.env.ADVANCE_PAYMENT_PERCENT || 30),
+  // Support Configuration
+  whatsappNumber: process.env.WHATSAPP_SUPPORT_NUMBER || "+919876543210",
+  // Existing configs
   shipmozoApiKey: process.env.SHIPMOZO_API_KEY as string,
+  emailService: process.env.EMAIL_SERVICE || "gmail",
+  emailApiKey: process.env.EMAIL_API_KEY,
   emailUser: process.env.EMAIL_USER as string,
   emailPass: process.env.EMAIL_PASS as string,
+  adminEmail: process.env.ADMIN_EMAIL || "admin@morfyx.com",
   frontendUrls,
   cookieDomain: process.env.COOKIE_DOMAIN || ""
 };

@@ -1,5 +1,6 @@
 // Admin API Client
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const TOKEN_KEY = "morfyx_admin_token";
 
 interface RequestOptions extends RequestInit {
     withCredentials?: boolean;
@@ -7,9 +8,22 @@ interface RequestOptions extends RequestInit {
 
 class AdminApiClient {
     private baseUrl: string;
+    private accessToken: string | null = null;
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
+        // Load token from localStorage if available
+        this.accessToken = localStorage.getItem(TOKEN_KEY);
+    }
+
+    setAccessToken(token: string) {
+        this.accessToken = token;
+        localStorage.setItem(TOKEN_KEY, token);
+    }
+
+    clearAccessToken() {
+        this.accessToken = null;
+        localStorage.removeItem(TOKEN_KEY);
     }
 
     private async request<T>(
@@ -18,16 +32,38 @@ class AdminApiClient {
     ): Promise<T> {
         const url = `${this.baseUrl}${endpoint}`;
 
-        const response = await fetch(url, {
+        const fetchOptions: RequestInit = {
             ...options,
             credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                ...options.headers,
-            },
-        });
+        };
+
+        // Set up headers
+        const headers: HeadersInit = {};
+
+        // Only set Content-Type for non-FormData requests
+        if (!(options.body instanceof FormData)) {
+            headers["Content-Type"] = "application/json";
+        }
+
+        // Add Authorization header if token exists
+        if (this.accessToken) {
+            headers["Authorization"] = `Bearer ${this.accessToken}`;
+        }
+
+        fetchOptions.headers = {
+            ...headers,
+            ...options.headers,
+        };
+
+        const response = await fetch(url, fetchOptions);
 
         if (!response.ok) {
+            // Handle 401 - token expired or invalid
+            if (response.status === 401) {
+                this.clearAccessToken();
+                window.location.href = "/login";
+            }
+
             const error = await response.json().catch(() => ({
                 message: `HTTP ${response.status}`,
             }));
@@ -35,6 +71,42 @@ class AdminApiClient {
         }
 
         return response.json();
+    }
+
+    // Auth
+    async adminLogin(credentials: { email: string; password: string }) {
+        const response = await this.request<any>("/auth/admin/login", {
+            method: "POST",
+            body: JSON.stringify(credentials),
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        // Token is set in httpOnly cookie by backend
+        // This is handled by credentials: "include"
+        // Also try to extract access_token from response if available for Authorization header
+        if (response.data?.accessToken) {
+            this.setAccessToken(response.data.accessToken);
+        }
+
+        return response;
+    }
+
+    async logout() {
+        try {
+            await this.request("/auth/logout", {
+                method: "POST",
+            });
+        } finally {
+            this.clearAccessToken();
+        }
+    }
+
+    async refreshToken() {
+        return this.request("/auth/refresh", {
+            method: "POST",
+        });
     }
 
     // Products (Admin CRUD)
@@ -48,18 +120,66 @@ class AdminApiClient {
         if (params?.limit) query.append("limit", params.limit.toString());
         if (params?.category) query.append("category", params.category);
 
-        return this.request<any>(`/products?${query}`);
+        const response = await this.request<any>(`/products?${query}`);
+
+        // Transform backend response to match admin's Product type
+        if (response.data?.items && Array.isArray(response.data.items)) {
+            response.data.items = response.data.items.map((p: any) => ({
+                id: p._id || p.id,
+                name: p.name,
+                category: p.animeCategory?.name || p.category || "General",
+                price: p.price,
+                discountPrice: p.discountPrice,
+                stock: p.stock || 0,
+                rating: p.rating || 0,
+                badge: p.badge,
+                imageUrl: p.images?.[0]?.url || p.images?.[0],
+                description: p.description,
+                offerText: p.offerStrip,
+                type: p.origin === "imported" ? "imported" : "standard",
+                featured: p.featured || false,
+                imported: p.origin === "imported",
+                status: p.status || "active"
+            }));
+        }
+
+        return response;
     }
 
     async getProduct(id: string) {
-        return this.request<any>(`/products/${id}`);
+        const response = await this.request<any>(`/products/${id}`);
+
+        // Transform single product for edit form
+        if (response.data?.product) {
+            const p = response.data.product;
+            response.data.product = {
+                id: p._id || p.id,
+                name: p.name,
+                category: p.animeCategory?.name || p.category || "General",
+                categoryId: p.animeCategory?._id || p.animeCategory || "",  // Category ID for form
+                price: p.price,
+                discountPrice: p.discountPrice,
+                stock: p.stock || 0,
+                rating: p.rating || 0,
+                badge: p.badge,
+                imageUrl: p.images?.[0]?.url || p.images?.[0],
+                images: p.images?.map((img: any) => ({ url: img.url || img })) || [],  // All images
+                description: p.description,
+                offerText: p.offerStrip,
+                type: p.origin === "imported" ? "imported" : "standard",
+                featured: p.featured || false,
+                imported: p.origin === "imported",
+                status: p.status || "active"
+            };
+        }
+
+        return response;
     }
 
     async createProduct(formData: FormData) {
         return this.request("/products", {
             method: "POST",
             body: formData,
-            headers: {}, // Let browser set Content-Type for multipart
         });
     }
 
@@ -67,7 +187,6 @@ class AdminApiClient {
         return this.request(`/products/${id}`, {
             method: "PUT",
             body: formData,
-            headers: {},
         });
     }
 
@@ -102,7 +221,6 @@ class AdminApiClient {
         });
     }
 
-    // Orders (Admin View)
     async getOrders(params?: {
         page?: number;
         limit?: number;
@@ -118,6 +236,17 @@ class AdminApiClient {
 
     async getOrder(id: string) {
         return this.request<any>(`/orders/${id}`);
+    }
+
+    async getShipment(shipmentId: string) {
+        return this.request<any>(`/shipping/track/${shipmentId}`);
+    }
+
+    async updateOrder(id: string, data: { status?: string }) {
+        return this.request(`/orders/${id}/status`, {
+            method: "PUT",
+            body: JSON.stringify(data),
+        });
     }
 
     // Inventory
@@ -168,24 +297,16 @@ class AdminApiClient {
         return this.request<any>(`/customers?${query}`);
     }
 
-    // Auth
-    async adminLogin(credentials: { email: string; password: string }) {
-        return this.request("/auth/admin/login", {
-            method: "POST",
-            body: JSON.stringify(credentials),
-        });
-    }
-
-    async logout() {
-        return this.request("/auth/logout", {
-            method: "POST",
-        });
-    }
-
-    async refreshToken() {
-        return this.request("/auth/refresh", {
-            method: "POST",
-        });
+    // Auth verification
+    async verifyAuth() {
+        try {
+            const response = await this.request<any>("/auth/me", {
+                method: "GET",
+            });
+            return response?.data?.user || null;
+        } catch (err) {
+            return null;
+        }
     }
 }
 

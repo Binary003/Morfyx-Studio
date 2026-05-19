@@ -1,8 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
-type User = {
+export type User = {
+    id?: string;
+    _id?: string;
     name: string;
     email: string;
+    phone?: string;
+    addresses?: any[];
+    orderHistory?: any[];
+    role?: "customer" | "admin";
 };
 
 type AuthContextValue = {
@@ -13,35 +19,45 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const STORAGE_KEY = "morfyx-user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
+    const [mounted, setMounted] = useState(false);
 
+    // Load user from localStorage on mount
     useEffect(() => {
-        const raw = localStorage.getItem("morfyx-user");
+        const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
             try {
-                setUser(JSON.parse(raw));
+                const parsedUser = JSON.parse(raw);
+                setUser(parsedUser);
             } catch {
-                localStorage.removeItem("morfyx-user");
+                localStorage.removeItem(STORAGE_KEY);
             }
         }
+        setMounted(true);
     }, []);
 
     const login = (nextUser: User) => {
         setUser(nextUser);
-        localStorage.setItem("morfyx-user", JSON.stringify(nextUser));
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
     };
 
     const logout = () => {
         setUser(null);
-        localStorage.removeItem("morfyx-user");
+        localStorage.removeItem(STORAGE_KEY);
+        // Clear auth cookies
+        document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     };
 
     const value = useMemo(
         () => ({ user, isAuthenticated: !!user, login, logout }),
         [user],
     );
+
+    if (!mounted) return null; // Prevent hydration mismatch
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

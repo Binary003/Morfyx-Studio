@@ -3,7 +3,7 @@ import { Response } from "express";
 import { env } from "../config/env";
 
 export const signAccessToken = (payload: object) =>
-  jwt.sign(payload, env.jwtSecret, { expiresIn: "15m" });
+  jwt.sign(payload, env.jwtSecret, { expiresIn: "7d" });
 
 export const signRefreshToken = (payload: object) =>
   jwt.sign(payload, env.jwtRefreshSecret, { expiresIn: "7d" });
@@ -25,7 +25,7 @@ export const setAuthCookies = (res: Response, accessToken: string, refreshToken:
 
   res.cookie("access_token", accessToken, {
     ...baseOptions,
-    maxAge: 15 * 60 * 1000
+    maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days to match token expiry
   });
 
   res.cookie("refresh_token", refreshToken, {

@@ -10,7 +10,33 @@ export const getUserOrders = async (userId: string) => {
 };
 
 export const getAllOrders = async () => {
-  return Order.find().sort({ createdAt: -1 }).populate("user", "name email");
+  const orders = await Order.find()
+    .sort({ createdAt: -1 })
+    .populate("user", "name email");
+
+  // Transform data for admin display
+  return orders.map((order: any) => ({
+    _id: order._id,
+    customer: order.user?.name || "Unknown",
+    customerEmail: order.user?.email,
+    orderStatus: order.orderStatus || "pending",
+    paymentStatus: order.paymentInfo?.status || "pending",
+    total: order.totalAmount,
+    advanceAmount: order.advanceAmount,
+    remainingCOD: order.remainingCOD,
+    createdAt: order.createdAt,
+    itemCount: order.orderedProducts?.length || 0,
+    trackingId: order.trackingId,
+    shipmentStatus: order.shipmentStatus,
+    shippingInfo: {
+      name: order.shippingInfo?.name,
+      address: order.shippingInfo?.address,
+      city: order.shippingInfo?.city,
+      state: order.shippingInfo?.state,
+      postalCode: order.shippingInfo?.postalCode,
+      phone: order.shippingInfo?.phone
+    }
+  }));
 };
 
 export const updateOrderStatus = async (id: string, status: string, trackingId?: string) => {

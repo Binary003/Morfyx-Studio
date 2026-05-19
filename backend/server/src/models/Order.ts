@@ -12,12 +12,15 @@ export interface OrderDocument extends Document {
   user: Types.ObjectId;
   orderedProducts: OrderedProduct[];
   totalAmount: number;
+  advanceAmount: number; // 30% payment via Razorpay
+  remainingCOD: number; // 70% to be collected as COD
   paymentInfo: {
     provider: string;
     orderId?: string;
     paymentId?: string;
     signature?: string;
     status: "pending" | "paid" | "failed";
+    advancePaid: boolean;
   };
   shippingInfo: {
     name: string;
@@ -29,7 +32,13 @@ export interface OrderDocument extends Document {
     country: string;
   };
   orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+  shipmentStatus?: "not_created" | "pending" | "picked" | "shipped" | "delivered" | "cancelled";
   trackingId?: string;
+  shiprocketOrderId?: string;
+  shipmentId?: string;
+  cancellationReason?: string;
+  cancellationDate?: Date;
+  refundStatus?: "none" | "requested" | "approved" | "rejected";
 }
 
 const orderSchema = new Schema<OrderDocument>(
@@ -45,12 +54,23 @@ const orderSchema = new Schema<OrderDocument>(
       }
     ],
     totalAmount: { type: Number, required: true },
+    advanceAmount: { 
+      type: Number, 
+      default: 0,
+      description: "30% advance payment via Razorpay"
+    },
+    remainingCOD: { 
+      type: Number, 
+      default: 0,
+      description: "70% COD amount"
+    },
     paymentInfo: {
       provider: { type: String, default: "razorpay" },
       orderId: { type: String },
       paymentId: { type: String },
       signature: { type: String },
-      status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" }
+      status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
+      advancePaid: { type: Boolean, default: false }
     },
     shippingInfo: {
       name: { type: String, required: true },
@@ -66,7 +86,21 @@ const orderSchema = new Schema<OrderDocument>(
       enum: ["pending", "paid", "processing", "shipped", "delivered", "cancelled"],
       default: "pending"
     },
-    trackingId: { type: String }
+    shipmentStatus: {
+      type: String,
+      enum: ["not_created", "pending", "picked", "shipped", "delivered", "cancelled"],
+      default: "not_created"
+    },
+    trackingId: { type: String },
+    shiprocketOrderId: { type: String },
+    shipmentId: { type: String },
+    cancellationReason: { type: String },
+    cancellationDate: { type: Date },
+    refundStatus: {
+      type: String,
+      enum: ["none", "requested", "approved", "rejected"],
+      default: "none"
+    }
   },
   { timestamps: true }
 );

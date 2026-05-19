@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { SectionHeader } from "../components/common/SectionHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -6,12 +6,35 @@ import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } fro
 import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Select } from "../components/ui/select";
-import { orders as seedOrders } from "../data/mock";
+import { adminApi } from "../lib/api";
+
+interface Order {
+    _id: string;
+    customer: string;
+    customerEmail?: string;
+    orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+    paymentStatus: "pending" | "paid" | "failed";
+    total: number;
+    advanceAmount?: number;
+    remainingCOD?: number;
+    shipmentStatus?: string;
+    trackingId?: string;
+    itemCount?: number;
+    createdAt: string;
+    shippingInfo?: {
+        name: string;
+        address: string;
+        city: string;
+        state: string;
+        postalCode: string;
+        phone: string;
+    };
+}
 
 const statusMap: Record<string, "info" | "success" | "warning" | "danger"> = {
     pending: "warning",
+    paid: "info",
     processing: "info",
-    packed: "info",
     shipped: "success",
     delivered: "success",
     cancelled: "danger",
@@ -21,33 +44,97 @@ const paymentMap: Record<string, "info" | "success" | "warning" | "danger"> = {
     paid: "success",
     pending: "warning",
     failed: "danger",
-    refunded: "info",
+};
+
+const shipmentMap: Record<string, "info" | "success" | "warning" | "danger"> = {
+    "not_created": "warning",
+    pending: "warning",
+    picked: "info",
+    shipped: "info",
+    delivered: "success",
+    cancelled: "danger",
 };
 
 export function OrdersPage() {
-    const [items, setItems] = useState(seedOrders);
+    const [orders, setOrders] = useState<Order[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
     const [search, setSearch] = useState("");
-    const [dateFilter, setDateFilter] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
 
-    const filtered = useMemo(() => {
-        return items.filter((order) => {
-            const matchesSearch = order.customer.toLowerCase().includes(search.toLowerCase()) || order.id.toLowerCase().includes(search.toLowerCase());
-            const matchesDate = dateFilter ? order.createdAt === dateFilter : true;
-            const matchesStatus = statusFilter === "all" ? true : order.status === statusFilter;
-            return matchesSearch && matchesDate && matchesStatus;
-        });
-    }, [dateFilter, items, search, statusFilter]);
+    useEffect(() => {
+        const fetchOrders = async () => {
+            try {
+                setLoading(true);
+                const response = await adminApi.getOrders();
+                setOrders(response.data?.items || []);
+            } catch (err: any) {
+                setError(err.message || "Failed to load orders");
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const updateStatus = (id: string, status: string) => {
-        setItems((prev) => prev.map((order) => (order.id === id ? { ...order, status: status as typeof order.status } : order)));
+        fetchOrders();
+    }, []);
+
+    const filtered = useMemo(() => {
+        return orders.filter((order) => {
+            const matchesSearch = 
+                order.customer.toLowerCase().includes(search.toLowerCase()) || 
+                order._id.toLowerCase().includes(search.toLowerCase());
+            const matchesStatus = statusFilter === "all" ? true : order.orderStatus === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+    }, [search, orders, statusFilter]);
+
+    const updateStatus = async (id: string, orderStatus: string) => {
+        try {
+            await adminApi.updateOrder(id, { status: orderStatus });
+            setOrders((prev) => 
+                prev.map((order) => 
+                    order._id === id ? { ...order, orderStatus: orderStatus as Order["orderStatus"] } : order
+                )
+            );
+        } catch (err) {
+            console.error("Failed to update order status:", err);
+        }
     };
+
+    const refreshShipment = async (orderId: string, shipmentId?: string) => {
+        if (!shipmentId) return;
+        try {
+            const res = await adminApi.getShipment(shipmentId);
+            const data = res.data || res;
+            setOrders((prev) => prev.map((o) => o._id === orderId ? { ...o, shipmentStatus: data.status || data.shipmentStatus, trackingId: data.tracking_id || o.trackingId } : o));
+        } catch (err) {
+            console.error("Failed to refresh shipment:", err);
+        }
+    };
+
+    if (loading) {
+        return (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                <SectionHeader title="Orders" subtitle="Search by customer or date and update order status in one place." />
+                <div className="mt-6 text-center">Loading orders...</div>
+            </motion.div>
+        );
+    }
+
+    if (error) {
+        return (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+                <SectionHeader title="Orders" subtitle="Search by customer or date and update order status in one place." />
+                <div className="mt-6 text-center text-red-600">{error}</div>
+            </motion.div>
+        );
+    }
 
     return (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
             <SectionHeader
                 title="Orders"
-                subtitle="Search by customer or date and update order status in one place."
+                subtitle={`Managing ${filtered.length} orders`}
             />
 
             <Card className="mt-6">
@@ -55,16 +142,11 @@ export function OrdersPage() {
                     <CardTitle>Order List</CardTitle>
                 </CardHeader>
                 <CardContent className="overflow-hidden">
-                    <div className="mb-4 grid gap-3 md:grid-cols-3">
+                    <div className="mb-4 grid gap-3 md:grid-cols-2">
                         <Input
                             placeholder="Search by customer or order ID"
                             value={search}
                             onChange={(event) => setSearch(event.target.value)}
-                        />
-                        <Input
-                            type="date"
-                            value={dateFilter}
-                            onChange={(event) => setDateFilter(event.target.value)}
                         />
                         <Select
                             value={statusFilter}
@@ -72,8 +154,8 @@ export function OrdersPage() {
                         >
                             <option value="all">All statuses</option>
                             <option value="pending">Pending</option>
+                            <option value="paid">Paid</option>
                             <option value="processing">Processing</option>
-                            <option value="packed">Packed</option>
                             <option value="shipped">Shipped</option>
                             <option value="delivered">Delivered</option>
                             <option value="cancelled">Cancelled</option>
@@ -82,35 +164,73 @@ export function OrdersPage() {
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableHeaderCell>Order</TableHeaderCell>
+                                <TableHeaderCell>Order ID</TableHeaderCell>
                                 <TableHeaderCell>Customer</TableHeaderCell>
-                                <TableHeaderCell>Date</TableHeaderCell>
-                                <TableHeaderCell>Total</TableHeaderCell>
+                                <TableHeaderCell>Delivery Address</TableHeaderCell>
                                 <TableHeaderCell>Payment</TableHeaderCell>
+                                <TableHeaderCell>Shipment</TableHeaderCell>
                                 <TableHeaderCell>Status</TableHeaderCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
                             {filtered.map((order) => (
-                                <TableRow key={order.id}>
-                                    <TableCell>{order.id}</TableCell>
-                                    <TableCell>{order.customer}</TableCell>
-                                    <TableCell>{order.createdAt}</TableCell>
-                                    <TableCell>Rs. {order.total.toLocaleString()}</TableCell>
+                                <TableRow key={order._id}>
+                                    <TableCell className="text-xs font-mono">{order._id.slice(0, 8)}</TableCell>
                                     <TableCell>
-                                        <Badge variant={paymentMap[order.paymentStatus]}>{order.paymentStatus}</Badge>
+                                        <div className="text-sm font-medium">{order.customer}</div>
+                                        <div className="text-xs text-gray-500">{order.customerEmail || 'N/A'}</div>
+                                        <div className="text-xs text-gray-500 mt-1">📞 {order.shippingInfo?.phone || 'N/A'}</div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-xs">
+                                            <div className="font-medium">{order.shippingInfo?.address || 'N/A'}</div>
+                                            <div className="text-gray-500">{order.shippingInfo?.city}, {order.shippingInfo?.state} {order.shippingInfo?.postalCode}</div>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-sm">
+                                            <div className="font-semibold">₹{order.total?.toLocaleString()} Total</div>
+                                            {order.advanceAmount ? (
+                                                <>
+                                                    <div className="text-xs text-green-600 font-medium">Paid: ₹{order.advanceAmount.toLocaleString()} (30%)</div>
+                                                    <div className="text-xs text-blue-600 font-medium">COD: ₹{order.remainingCOD?.toLocaleString()} (70%)</div>
+                                                </>
+                                            ) : null}
+                                            <Badge variant={paymentMap[order.paymentStatus]} className="mt-1">
+                                                {order.paymentStatus}
+                                            </Badge>
+                                        </div>
+                                    </TableCell>
+                                    <TableCell>
+                                        <div className="text-sm">
+                                            {order.trackingId ? (
+                                                <>
+                                                    <div className="font-mono text-xs">{order.trackingId}</div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Badge variant={shipmentMap[order.shipmentStatus || "not_created"]}>
+                                                            {order.shipmentStatus || "Not Created"}
+                                                        </Badge>
+                                                        <button className="text-xs text-blue-500 underline" onClick={() => refreshShipment(order._id, order.trackingId)}>Refresh</button>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <Badge variant="warning">No Tracking</Badge>
+                                            )}
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <Badge variant={statusMap[order.status]}>{order.status}</Badge>
+                                            <Badge variant={statusMap[order.orderStatus]}>
+                                                {order.orderStatus}
+                                            </Badge>
                                             <Select
-                                                value={order.status}
-                                                onChange={(event) => updateStatus(order.id, event.target.value)}
+                                                value={order.orderStatus}
+                                                onChange={(event) => updateStatus(order._id, event.target.value)}
                                                 className="max-w-[140px]"
                                             >
                                                 <option value="pending">Pending</option>
+                                                <option value="paid">Paid</option>
                                                 <option value="processing">Processing</option>
-                                                <option value="packed">Packed</option>
                                                 <option value="shipped">Shipped</option>
                                                 <option value="delivered">Delivered</option>
                                                 <option value="cancelled">Cancelled</option>

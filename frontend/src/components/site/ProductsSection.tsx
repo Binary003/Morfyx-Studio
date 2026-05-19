@@ -125,6 +125,10 @@ export function ProductsSection({
                                         <Star key={j} className="h-3 w-3 fill-accent text-accent" />
                                     ))}
                                     <span className="text-muted-foreground ml-1">{activeProduct.rating}</span>
+                                    <span className="mx-2 text-muted-foreground">&bull;</span>
+                                    <span className={activeProduct.stock !== undefined && activeProduct.stock > 0 ? "text-green-400" : "text-destructive"}>
+                                        {activeProduct.stock !== undefined && activeProduct.stock > 0 ? `In Stock (${activeProduct.stock})` : "Out of Stock"}
+                                    </span>
                                 </div>
                                 <p className="text-muted-foreground">
                                     {activeProduct.description}
@@ -144,7 +148,8 @@ export function ProductsSection({
                                     <button
                                         type="button"
                                         onClick={() => addItem(activeProduct)}
-                                        className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
+                                        disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
+                                        className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                     >
                                         Add to Cart
                                     </button>
@@ -232,6 +237,9 @@ function ProductCard({
                                 {formatPrice(product.oldPrice)}
                             </div>
                         )}
+                        <div className={`mt-1 text-[10px] ${product.stock !== undefined && product.stock > 0 ? "text-green-400" : "text-destructive"}`}>
+                            {product.stock !== undefined && product.stock > 0 ? `In Stock (${product.stock})` : "Out of Stock"}
+                        </div>
                     </div>
                     <button
                         type="button"
@@ -239,8 +247,9 @@ function ProductCard({
                             event.stopPropagation();
                             onAddToCart();
                         }}
+                        disabled={product.stock !== undefined && product.stock <= 0}
                         aria-label="Add to cart"
-                        className="h-10 w-10 rounded-xl bg-[var(--gradient-neon)] grid place-items-center text-primary-foreground hover:glow-pink transition active:scale-95"
+                        className="h-10 w-10 rounded-xl bg-[var(--gradient-neon)] grid place-items-center text-primary-foreground hover:glow-pink transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none"
                     >
                         <ShoppingBag className="h-4 w-4" />
                     </button>

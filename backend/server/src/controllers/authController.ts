@@ -49,7 +49,8 @@ export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
   if (user.role !== "admin") throw new ApiError(403, "Admin access required");
 
   setAuthCookies(res, accessToken, refreshToken);
-  sendSuccess(res, { user }, "Admin logged in");
+  // Return accessToken in response body so client can use it for Authorization header
+  sendSuccess(res, { user, accessToken }, "Admin logged in");
 });
 
 export const refresh = asyncHandler(async (req: Request, res: Response) => {

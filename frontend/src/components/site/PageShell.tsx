@@ -4,6 +4,7 @@ import { Footer } from "@/components/site/Footer";
 import { CursorGlow } from "@/components/site/CursorGlow";
 import { ScrollProgress } from "@/components/site/ScrollProgress";
 import { OffersStrip } from "@/components/site/OffersStrip";
+import { Toaster } from "sonner";
 
 export function PageShell({ children }: { children: ReactNode }) {
   return (
@@ -14,6 +15,7 @@ export function PageShell({ children }: { children: ReactNode }) {
       <Navbar withOfferStrip />
       <main className="relative z-10 pt-40">{children}</main>
       <Footer />
+      <Toaster />
     </div>
   );
 }

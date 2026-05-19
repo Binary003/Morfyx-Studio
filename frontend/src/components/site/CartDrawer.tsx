@@ -3,10 +3,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { formatPrice } from "@/lib/products";
 import { useCart } from "@/lib/cart";
 import { useAuth } from "@/lib/auth";
-import { Link } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
 export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
+    const navigate = useNavigate();
     const { items, itemCount, subtotal, updateQty, removeItem, clear } = useCart();
     const { isAuthenticated } = useAuth();
     const [authPromptOpen, setAuthPromptOpen] = useState(false);
@@ -14,6 +15,16 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
     const shipping = itemCount > 0 ? 18 : 0;
     const tax = itemCount > 0 ? Math.round(subtotal * 0.08) : 0;
     const total = subtotal + shipping + tax;
+
+    const handleCheckout = () => {
+        if (!isAuthenticated) {
+            setAuthPromptOpen(true);
+            setCartOpen(false);
+            return;
+        }
+        setCartOpen(false);
+        navigate({ to: "/checkout" });
+    };
 
     return (
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
@@ -112,13 +123,7 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
                     <div className="flex flex-col gap-3">
                         <button
                             type="button"
-                            onClick={() => {
-                                if (!isAuthenticated) {
-                                    setAuthPromptOpen(true);
-                                    setCartOpen(false);
-                                    return;
-                                }
-                            }}
+                            onClick={handleCheckout}
                             className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
                         >
                             {isAuthenticated ? "Proceed to Payment" : "Log In to Checkout"}

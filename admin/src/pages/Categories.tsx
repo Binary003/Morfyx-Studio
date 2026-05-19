@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { SectionHeader } from "../components/common/SectionHeader";
 import { Button } from "../components/ui/button";
@@ -7,11 +7,20 @@ import { Badge } from "../components/ui/badge";
 import { Input } from "../components/ui/input";
 import { Textarea } from "../components/ui/textarea";
 import { Switch } from "../components/ui/switch";
-import { categories } from "../data/mock";
+import { adminApi } from "../lib/api";
 import type { Category } from "../types";
 
+interface CategoryResponse {
+    _id: string;
+    name: string;
+    slug: string;
+    description?: string;
+    featured?: boolean;
+}
+
 export function CategoriesPage() {
-    const [items, setItems] = useState<Category[]>(categories);
+    const [items, setItems] = useState<Category[]>([]);
+    const [loading, setLoading] = useState(true);
     const [open, setOpen] = useState(false);
     const [editingId, setEditingId] = useState<string | null>(null);
     const [form, setForm] = useState({
@@ -21,7 +30,40 @@ export function CategoriesPage() {
         featured: false,
     });
 
-    const handleSave = () => {
+    // Fetch categories from backend on mount
+    useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const response = await adminApi.getCategories();
+                // Response structure: { success, message, data: { categories: [...] } }
+                let catList: CategoryResponse[] = [];
+                if (Array.isArray(response.data?.categories)) {
+                    catList = response.data.categories;
+                } else if (Array.isArray(response.data?.items)) {
+                    catList = response.data.items;
+                } else if (Array.isArray(response.data)) {
+                    catList = response.data;
+                }
+
+                const categoryData: Category[] = catList.map((cat: CategoryResponse) => ({
+                    id: cat._id,
+                    name: cat.name,
+                    slug: cat.slug,
+                    description: cat.description || "",
+                    featured: cat.featured || false,
+                }));
+                setItems(categoryData);
+            } catch (err) {
+                console.error("Failed to fetch categories:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchCategories();
+    }, []);
+
+    const handleSave = async () => {
         if (!form.name.trim()) {
             return;
         }
@@ -31,15 +73,26 @@ export function CategoriesPage() {
             description: form.description.trim() || "New category",
             featured: form.featured,
         };
-        if (editingId) {
-            setItems((prev) => prev.map((item) => (item.id === editingId ? { ...item, ...payload } : item)));
-        } else {
-            const next: Category = { id: `c-${Date.now()}`, ...payload };
-            setItems((prev) => [next, ...prev]);
+        try {
+            if (editingId) {
+                // Update category
+                await adminApi.updateCategory(editingId, payload);
+                setItems((prev) => prev.map((item) => (item.id === editingId ? { ...item, ...payload } : item)));
+            } else {
+                // Create category
+                const response = await adminApi.createCategory(payload);
+                const newCategory: Category = {
+                    id: response.data?.data?._id || `c-${Date.now()}`,
+                    ...payload,
+                };
+                setItems((prev) => [newCategory, ...prev]);
+            }
+            setForm({ name: "", slug: "", description: "", featured: false });
+            setEditingId(null);
+            setOpen(false);
+        } catch (err) {
+            console.error("Failed to save category:", err);
         }
-        setForm({ name: "", slug: "", description: "", featured: false });
-        setEditingId(null);
-        setOpen(false);
     };
 
     const handleEdit = (category: Category) => {
@@ -53,8 +106,13 @@ export function CategoriesPage() {
         setOpen(true);
     };
 
-    const handleDelete = (category: Category) => {
-        setItems((prev) => prev.filter((item) => item.id !== category.id));
+    const handleDelete = async (category: Category) => {
+        try {
+            await adminApi.deleteCategory(category.id);
+            setItems((prev) => prev.filter((item) => item.id !== category.id));
+        } catch (err) {
+            console.error("Failed to delete category:", err);
+        }
     };
 
     return (
