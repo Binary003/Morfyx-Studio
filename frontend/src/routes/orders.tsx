@@ -180,7 +180,7 @@ function OrdersPage() {
                     )}
 
                     <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                        <div className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</div>
+                      <div className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</div>
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusBadgeClass(order.orderStatus)}`}>
                         {order.orderStatus}
                       </span>

@@ -54,13 +54,13 @@ const orderSchema = new Schema<OrderDocument>(
       }
     ],
     totalAmount: { type: Number, required: true },
-    advanceAmount: { 
-      type: Number, 
+    advanceAmount: {
+      type: Number,
       default: 0,
       description: "30% advance payment via Razorpay"
     },
-    remainingCOD: { 
-      type: Number, 
+    remainingCOD: {
+      type: Number,
       default: 0,
       description: "70% COD amount"
     },

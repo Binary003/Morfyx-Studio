@@ -2,10 +2,10 @@ import { Router } from "express";
 import { requireAuth } from "../middleware/auth";
 import { requireRole } from "../middleware/role";
 import {
-  trackShipment,
-  cancelShipment,
-  getShipmentDetails,
-  createShipment,
+    trackShipment,
+    cancelShipment,
+    getShipmentDetails,
+    createShipment,
 } from "../controllers/shippingController";
 
 const router = Router();

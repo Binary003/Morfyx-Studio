@@ -53,7 +53,7 @@ function CheckoutPage() {
     const shipping = itemCount > 0 ? 18 : 0;
     const tax = itemCount > 0 ? Math.round(subtotal * 0.08) : 0;
     const total = subtotal + shipping + tax;
-    
+
     // Payment breakdown: 30% advance now, 70% COD later
     const advanceAmount = Math.round(total * 0.30);
     const codAmount = total - advanceAmount;

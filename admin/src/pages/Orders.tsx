@@ -80,8 +80,8 @@ export function OrdersPage() {
 
     const filtered = useMemo(() => {
         return orders.filter((order) => {
-            const matchesSearch = 
-                order.customer.toLowerCase().includes(search.toLowerCase()) || 
+            const matchesSearch =
+                order.customer.toLowerCase().includes(search.toLowerCase()) ||
                 order._id.toLowerCase().includes(search.toLowerCase());
             const matchesStatus = statusFilter === "all" ? true : order.orderStatus === statusFilter;
             return matchesSearch && matchesStatus;
@@ -91,8 +91,8 @@ export function OrdersPage() {
     const updateStatus = async (id: string, orderStatus: string) => {
         try {
             await adminApi.updateOrder(id, { status: orderStatus });
-            setOrders((prev) => 
-                prev.map((order) => 
+            setOrders((prev) =>
+                prev.map((order) =>
                     order._id === id ? { ...order, orderStatus: orderStatus as Order["orderStatus"] } : order
                 )
             );
