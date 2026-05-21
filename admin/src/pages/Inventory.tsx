@@ -22,13 +22,13 @@ export function InventoryPage() {
         try {
             setLoading(true);
             const response = await adminApi.getInventory({ limit: 100 });
-            
+
             if (response.success && response.data) {
                 // Parse inventory data and calculate stock percentages
-                const items = Array.isArray(response.data) 
-                    ? response.data 
+                const items = Array.isArray(response.data)
+                    ? response.data
                     : response.data.items || [];
-                
+
                 const inventoryItems: InventoryItem[] = items.map((item: any) => ({
                     productId: item.product?._id || item.productId,
                     productName: item.product?.name || item.productName || "Unknown",
@@ -54,7 +54,7 @@ export function InventoryPage() {
     // Fetch on mount and set up periodic refresh
     useEffect(() => {
         fetchInventory();
-        
+
         // Refetch every 30 seconds for real-time updates
         const interval = setInterval(fetchInventory, 30000);
         return () => clearInterval(interval);
@@ -96,8 +96,8 @@ export function InventoryPage() {
                                         <span>Stock Level</span>
                                         <span>{item.currentStock} units</span>
                                     </div>
-                                    <Progress 
-                                        value={stockPercentage} 
+                                    <Progress
+                                        value={stockPercentage}
                                         className={isLowStock ? "bg-yellow-500/20" : ""}
                                     />
                                     {isLowStock && (
@@ -129,7 +129,7 @@ export function InventoryPage() {
                     ) : (
                         <div className="space-y-3">
                             {lowStockItems.map((item) => (
-                                <div 
+                                <div
                                     key={item.productId}
                                     className="rounded-xl border border-yellow-500/30 bg-yellow-500/5 p-3 text-sm"
                                 >
