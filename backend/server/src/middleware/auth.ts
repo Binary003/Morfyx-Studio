@@ -11,7 +11,7 @@ export const requireAuth = (req: Request, _res: Response, next: NextFunction) =>
     throw new ApiError(401, "Unauthorized");
   }
 
-  const decoded = verifyAccessToken(token) as { id: string; role: string };
+  const decoded = verifyAccessToken(token) as { id: string; role: "admin" | "customer" };
   req.user = { id: decoded.id, role: decoded.role };
   next();
 };

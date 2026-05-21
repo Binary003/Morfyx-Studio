@@ -242,6 +242,17 @@ class AdminApiClient {
         return this.request<any>(`/shipping/track/${shipmentId}`);
     }
 
+    async createShipment(orderId: string) {
+        return this.request<any>("/shipping/create", {
+            method: "POST",
+            body: JSON.stringify({ orderId }),
+        });
+    }
+
+    async getNotifications() {
+        return this.request<any>("/notifications");
+    }
+
     async updateOrder(id: string, data: { status?: string }) {
         return this.request(`/orders/${id}/status`, {
             method: "PUT",
@@ -311,3 +322,4 @@ class AdminApiClient {
 }
 
 export const adminApi = new AdminApiClient(API_BASE_URL);
+export const api = adminApi;

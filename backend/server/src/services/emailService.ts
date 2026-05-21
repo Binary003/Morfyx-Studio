@@ -1,13 +1,24 @@
 import { mailTransporter } from "../config/mail";
+import { env } from "../config/env";
 import { OrderDocument } from "../models/Order";
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
-  await mailTransporter.sendMail({
-    from: "Morfyx Studio <onboarding@resend.dev>",
-    to,
-    subject,
-    html
-  });
+  const start = Date.now();
+  try {
+    const info = await mailTransporter.sendMail({
+      from: `Morfyx Studio <${env.emailFrom}>`,
+      to,
+      subject,
+      html
+    });
+    const duration = Date.now() - start;
+    console.log(`✉️ Email sent to ${to} (subject: ${subject}) — messageId: ${info.messageId}, duration: ${duration}ms`);
+    return info;
+  } catch (err) {
+    const duration = Date.now() - start;
+    console.error(`❌ Failed to send email to ${to} (subject: ${subject}) — duration: ${duration}ms`, err);
+    throw err;
+  }
 };
 
 export const templates = {
@@ -23,21 +34,20 @@ export const templates = {
       <p>Your order ${orderId} has been placed.</p>
     </div>
   `,
-  paymentConfirmation: (order: OrderDocument) => `
+  customerOrderNotification: (order: OrderDocument) => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-      <h2 style="color: #2563eb;">💰 Payment Received</h2>
-      
+      <h2 style="color: #2563eb;">Order Received</h2>
+
       <p>Hi <strong>${order.shippingInfo.name}</strong>,</p>
-      
-      <p>Thank you for your payment! Your order is now being processed for shipment.</p>
-      
-      <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px; margin: 20px 0;">
-        <h3 style="margin-top: 0; color: #1e40af;">Order Details</h3>
+      <p>Thank you for your order. We have received your request and your order is now pending payment verification.</p>
+
+      <div style="background: #f8fafc; border-left: 4px solid #2563eb; padding: 12px; margin: 20px 0;">
         <p><strong>Order ID:</strong> ${order._id}</p>
         <p><strong>Order Date:</strong> ${new Date(order.createdAt).toLocaleDateString()}</p>
+        <p><strong>Order Status:</strong> ${order.orderStatus}</p>
       </div>
-      
-      <h3 style="color: #1e40af;">Products Ordered:</h3>
+
+      <h3 style="color: #1e40af;">Items in your order:</h3>
       <table style="width: 100%; border-collapse: collapse;">
         <tr style="background: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
           <th style="text-align: left; padding: 10px;">Product</th>
@@ -52,30 +62,82 @@ export const templates = {
             <td style="text-align: right; padding: 10px;">₹${p.price}</td>
             <td style="text-align: right; padding: 10px; font-weight: bold;">₹${p.price * p.quantity}</td>
           </tr>
+        `).join("")}
+      </table>
+
+      <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; margin: 20px 0;">
+        <p><strong>Total Amount:</strong> ₹${order.totalAmount}</p>
+        <p><strong>Advance (30%):</strong> ₹${order.advanceAmount || Math.round(order.totalAmount * 0.3)}</p>
+        <p><strong>COD Balance (70%):</strong> ₹${order.remainingCOD || order.totalAmount - Math.round(order.totalAmount * 0.3)}</p>
+      </div>
+
+      <p>We will send another email once your payment is successfully verified.</p>
+
+      <p style="margin-top: 20px;">Best regards,<br><strong>Morfyx Studio</strong></p>
+    </div>
+  `,
+  paymentConfirmation: (order: OrderDocument) => `
+    ${(() => {
+      const totalFromItems = (order.orderedProducts || []).reduce((s, p) => s + (p.price || 0) * (p.quantity || 0), 0);
+      const total = (order.totalAmount || totalFromItems || 0);
+      const advance = (typeof order.advanceAmount === 'number' ? order.advanceAmount : Math.round(total * (env.advancePaymentPercent || 30) / 100));
+      const remaining = (typeof order.remainingCOD === 'number' ? order.remainingCOD : Math.max(0, total - advance));
+
+      return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #2563eb;">💰 Payment Received</h2>
+      
+      <p>Hi <strong>${order.shippingInfo?.name || 'Customer'}</strong>,</p>
+      
+      <p>Thank you for your payment! Your order is now being processed for shipment.</p>
+      
+      <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #1e40af;">Order Details</h3>
+        <p><strong>Order ID:</strong> ${order._id}</p>
+        <p><strong>Order Date:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}</p>
+      </div>
+      
+      <h3 style="color: #1e40af;">Products Ordered:</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Product</th>
+          <th style="text-align: center; padding: 10px;">Qty</th>
+          <th style="text-align: right; padding: 10px;">Price</th>
+          <th style="text-align: right; padding: 10px;">Total</th>
+        </tr>
+        ${(order.orderedProducts || []).map(p => `
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 10px;">${p.name}</td>
+            <td style="text-align: center; padding: 10px;">${p.quantity}</td>
+            <td style="text-align: right; padding: 10px;">₹${p.price}</td>
+            <td style="text-align: right; padding: 10px; font-weight: bold;">₹${(p.price || 0) * (p.quantity || 0)}</td>
+          </tr>
         `).join('')}
       </table>
       
       <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; margin: 20px 0;">
         <h3 style="margin-top: 0; color: #166534;">Payment Breakdown</h3>
-        <p><strong style="color: #10b981;">✓ Advance Paid (30%):</strong> ₹${order.advanceAmount}</p>
-        <p><strong style="color: #2563eb;">⏳ Remaining COD (70%):</strong> ₹${order.remainingCOD}</p>
-        <p style="margin-top: 10px; font-weight: bold; border-top: 1px solid #86efac; padding-top: 10px;">Total: ₹${order.totalAmount}</p>
+        <p><strong style="color: #10b981;">✓ Advance Paid (30%):</strong> ₹${advance}</p>
+        <p><strong style="color: #2563eb;">⏳ Remaining COD (70%):</strong> ₹${remaining}</p>
+        <p style="margin-top: 10px; font-weight: bold; border-top: 1px solid #86efac; padding-top: 10px;">Total: ₹${total}</p>
         <p style="font-size: 12px; color: #16a34a; margin-top: 8px;">💡 The remaining 70% will be collected when your package is delivered.</p>
       </div>
       
       <h3 style="color: #1e40af;">Delivery Address:</h3>
       <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px; border-radius: 4px;">
-        <p><strong>${order.shippingInfo.name}</strong></p>
-        <p>${order.shippingInfo.address}</p>
-        <p>${order.shippingInfo.city}, ${order.shippingInfo.state} ${order.shippingInfo.postalCode}</p>
-        <p>${order.shippingInfo.country}</p>
-        <p><strong>Phone:</strong> ${order.shippingInfo.phone}</p>
+        <p><strong>${order.shippingInfo?.name || ''}</strong></p>
+        <p>${order.shippingInfo?.address || ''}</p>
+        <p>${order.shippingInfo?.city || ''}, ${order.shippingInfo?.state || ''} ${order.shippingInfo?.postalCode || ''}</p>
+        <p>${order.shippingInfo?.country || ''}</p>
+        <p><strong>Phone:</strong> ${order.shippingInfo?.phone || ''}</p>
       </div>
       
       <p style="margin-top: 20px; font-size: 12px; color: #666;">Your shipment will be ready soon. Track your order using the tracking ID provided in the next email.</p>
       
       <p style="margin-top: 20px;">Best regards,<br><strong>Morfyx Studio</strong></p>
     </div>
+      `;
+    })()}
   `,
   shipmentTracking: (order: OrderDocument, trackingId: string) => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">

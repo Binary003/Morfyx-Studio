@@ -10,6 +10,7 @@ import { adminApi } from "../lib/api";
 
 interface Order {
     _id: string;
+    shipmentId?: string;
     customer: string;
     customerEmail?: string;
     orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
@@ -106,9 +107,29 @@ export function OrdersPage() {
         try {
             const res = await adminApi.getShipment(shipmentId);
             const data = res.data || res;
-            setOrders((prev) => prev.map((o) => o._id === orderId ? { ...o, shipmentStatus: data.status || data.shipmentStatus, trackingId: data.tracking_id || o.trackingId } : o));
+            setOrders((prev) => prev.map((o) => o._id === orderId ? { ...o, shipmentStatus: data.status || data.shipmentStatus, trackingId: data.trackingNumber || o.trackingId } : o));
         } catch (err) {
             console.error("Failed to refresh shipment:", err);
+        }
+    };
+
+    const createShipmentManually = async (orderId: string) => {
+        try {
+            const res = await adminApi.createShipment(orderId);
+            const order = res?.data?.order;
+            const shipment = res?.data?.shipment;
+            setOrders((prev) => prev.map((o) => o._id === orderId
+                ? {
+                    ...o,
+                    shipmentId: order?.shipmentId || shipment?.shipmentId || o.shipmentId,
+                    trackingId: order?.trackingId || shipment?.trackingId || o.trackingId,
+                    shipmentStatus: order?.shipmentStatus || "pending",
+                    orderStatus: order?.orderStatus || o.orderStatus,
+                }
+                : o));
+        } catch (err) {
+            console.error("Failed to create shipment manually:", err);
+            alert("Failed to create shipment. Please check Shiprocket credentials/logs.");
         }
     };
 
@@ -175,7 +196,7 @@ export function OrdersPage() {
                         <TableBody>
                             {filtered.map((order) => (
                                 <TableRow key={order._id}>
-                                    <TableCell className="text-xs font-mono">{order._id.slice(0, 8)}</TableCell>
+                                    <TableCell className="text-xs font-mono">{order._id}</TableCell>
                                     <TableCell>
                                         <div className="text-sm font-medium">{order.customer}</div>
                                         <div className="text-xs text-gray-500">{order.customerEmail || 'N/A'}</div>
@@ -203,18 +224,30 @@ export function OrdersPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="text-sm">
-                                            {order.trackingId ? (
+                                            {order.shipmentId ? (
                                                 <>
-                                                    <div className="font-mono text-xs">{order.trackingId}</div>
+                                                    <div className="font-mono text-xs">{order.trackingId || order.shipmentId}</div>
                                                     <div className="flex items-center gap-2 mt-1">
                                                         <Badge variant={shipmentMap[order.shipmentStatus || "not_created"]}>
                                                             {order.shipmentStatus || "Not Created"}
                                                         </Badge>
-                                                        <button className="text-xs text-blue-500 underline" onClick={() => refreshShipment(order._id, order.trackingId)}>Refresh</button>
+                                                        <button className="text-xs text-blue-500 underline" onClick={() => refreshShipment(order._id, order.shipmentId)}>Refresh</button>
                                                     </div>
                                                 </>
                                             ) : (
-                                                <Badge variant="warning">No Tracking</Badge>
+                                                <div className="space-y-2">
+                                                    <Badge variant={shipmentMap[order.shipmentStatus || "not_created"]}>
+                                                        {order.shipmentStatus || "not_created"}
+                                                    </Badge>
+                                                    {order.paymentStatus === "paid" && (
+                                                        <button
+                                                            className="text-xs text-blue-500 underline"
+                                                            onClick={() => createShipmentManually(order._id)}
+                                                        >
+                                                            Create Shipment
+                                                        </button>
+                                                    )}
+                                                </div>
                                             )}
                                         </div>
                                     </TableCell>

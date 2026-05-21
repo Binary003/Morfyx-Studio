@@ -10,6 +10,7 @@ export interface OrderedProduct {
 
 export interface OrderDocument extends Document {
   user: Types.ObjectId;
+  customerEmail?: string;
   orderedProducts: OrderedProduct[];
   totalAmount: number;
   advanceAmount: number; // 30% payment via Razorpay
@@ -26,6 +27,9 @@ export interface OrderDocument extends Document {
     name: string;
     phone: string;
     address: string;
+    addressLine1?: string;
+    addressLine2?: string;
+    landmark?: string;
     city: string;
     state: string;
     postalCode: string;
@@ -39,11 +43,14 @@ export interface OrderDocument extends Document {
   cancellationReason?: string;
   cancellationDate?: Date;
   refundStatus?: "none" | "requested" | "approved" | "rejected";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 const orderSchema = new Schema<OrderDocument>(
   {
     user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    customerEmail: { type: String, lowercase: true, trim: true },
     orderedProducts: [
       {
         product: { type: Schema.Types.ObjectId, ref: "Product", required: true },
@@ -74,11 +81,14 @@ const orderSchema = new Schema<OrderDocument>(
     },
     shippingInfo: {
       name: { type: String, required: true },
-      phone: { type: String, required: true },
+      phone: { type: String, required: true, match: /^\+?[0-9]{10,15}$/ },
       address: { type: String, required: true },
-      city: { type: String, required: true },
-      state: { type: String, required: true },
-      postalCode: { type: String, required: true },
+      addressLine1: { type: String },
+      addressLine2: { type: String },
+      landmark: { type: String },
+      city: { type: String, required: true, match: /^[A-Za-z\s.-]{2,50}$/ },
+      state: { type: String, required: true, match: /^[A-Za-z\s.-]{2,50}$/ },
+      postalCode: { type: String, required: true, match: /^[A-Za-z0-9\s-]{4,10}$/ },
       country: { type: String, required: true }
     },
     orderStatus: {

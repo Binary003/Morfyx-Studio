@@ -13,8 +13,8 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
     const [authPromptOpen, setAuthPromptOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
     const shipping = itemCount > 0 ? 18 : 0;
-    const tax = itemCount > 0 ? Math.round(subtotal * 0.08) : 0;
-    const total = subtotal + shipping + tax;
+    const tax = 0; // tax removed per request
+    const total = subtotal + shipping;
 
     const handleCheckout = () => {
         if (!isAuthenticated) {
@@ -101,10 +101,7 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
                             <span className="text-muted-foreground">Shipping</span>
                             <span>{formatPrice(shipping)}</span>
                         </div>
-                        <div className="mt-2 flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Tax</span>
-                            <span>{formatPrice(tax)}</span>
-                        </div>
+                        {/* Tax removed from totals */}
                         <div className="mt-4 flex items-center justify-between text-base font-semibold">
                             <span>Total</span>
                             <span className="text-gradient-neon font-display text-xl">{formatPrice(total)}</span>

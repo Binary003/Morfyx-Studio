@@ -34,7 +34,9 @@ function CheckoutPage() {
         name: user?.name || "",
         email: user?.email || "",
         phone: user?.phone || "",
-        street: "",
+        addressLine1: "",
+        addressLine2: "",
+        landmark: "",
         city: "",
         state: "",
         zip: "",
@@ -51,8 +53,8 @@ function CheckoutPage() {
     }, [isAuthenticated, items.length, navigate]);
 
     const shipping = itemCount > 0 ? 18 : 0;
-    const tax = itemCount > 0 ? Math.round(subtotal * 0.08) : 0;
-    const total = subtotal + shipping + tax;
+    const tax = 0; // removed tax calculation
+    const total = subtotal + shipping;
 
     // Payment breakdown: 30% advance now, 70% COD later
     const advanceAmount = Math.round(total * 0.30);
@@ -82,12 +84,30 @@ function CheckoutPage() {
 
         try {
             // Validate form
-            if (!formData.street || !formData.city || !formData.state || !formData.zip) {
+            if (!formData.addressLine1 || !formData.city || !formData.state || !formData.zip) {
                 throw new Error("Please fill in all address fields");
             }
 
+            if (!/^\+?[0-9]{10,15}$/.test(formData.phone.trim())) {
+                throw new Error("Please enter a valid phone number");
+            }
+
+            if (!/^[A-Za-z\s.-]{2,50}$/.test(formData.city.trim()) || !/^[A-Za-z\s.-]{2,50}$/.test(formData.state.trim())) {
+                throw new Error("City and state should only contain letters and spaces");
+            }
+
+            if (!/^[A-Za-z0-9\s-]{4,10}$/.test(formData.zip.trim())) {
+                throw new Error("Please enter a valid postal code");
+            }
+
+            const fullAddress = [formData.addressLine1, formData.addressLine2, formData.landmark]
+                .map((part) => part.trim())
+                .filter(Boolean)
+                .join(", ");
+
             // Create order first
-            const orderResponse = await api.createOrder({
+            const orderResponse: any = await api.createOrder({
+                customerEmail: formData.email.trim(),
                 orderedProducts: items.map((item) => ({
                     product: item.product.id,
                     name: item.product.name,
@@ -98,11 +118,14 @@ function CheckoutPage() {
                 totalAmount: Math.round(total * 100) / 100, // Round to 2 decimals
                 shippingInfo: {
                     name: formData.name,
-                    phone: formData.phone,
-                    address: formData.street,
-                    city: formData.city,
-                    state: formData.state,
-                    postalCode: formData.zip,
+                    phone: formData.phone.trim(),
+                    address: fullAddress,
+                    addressLine1: formData.addressLine1.trim(),
+                    addressLine2: formData.addressLine2.trim(),
+                    landmark: formData.landmark.trim(),
+                    city: formData.city.trim(),
+                    state: formData.state.trim(),
+                    postalCode: formData.zip.trim(),
                     country: formData.country,
                 },
             });
@@ -113,7 +136,7 @@ function CheckoutPage() {
             }
 
             // Create Razorpay order (for 30% advance only)
-            const razorpayResponse = await api.createRazorpayOrder({
+            const razorpayResponse: any = await api.createRazorpayOrder({
                 orderId,
                 amount: Math.round(advanceAmount * 100), // Convert to paise (30% only)
             });
@@ -134,7 +157,7 @@ function CheckoutPage() {
                 handler: async (response: RazorpayResponse) => {
                     try {
                         // Verify payment
-                        const verifyResponse = await api.verifyPayment({
+                        const verifyResponse: any = await api.verifyPayment({
                             razorpayPaymentId: response.razorpay_payment_id,
                             razorpayOrderId: response.razorpay_order_id,
                             razorpaySignature: response.razorpay_signature,
@@ -143,9 +166,15 @@ function CheckoutPage() {
 
                         if (verifyResponse?.success || verifyResponse?.data?.success) {
                             // Show success toast, clear cart and redirect
-                            toast.success("Payment successful — your order is being processed.");
+                            toast.success(verifyResponse?.message || verifyResponse?.data?.message || "Payment verified and order placed.");
                             clear();
-                            navigate({ to: "/orders?success=true" });
+                            navigate({
+                                to: "/orders",
+                                search: {
+                                    success: true,
+                                    message: "Payment verified and order placed.",
+                                } as any,
+                            } as any);
                         } else {
                             throw new Error("Payment verification failed");
                         }
@@ -258,15 +287,44 @@ function CheckoutPage() {
 
                                         <div>
                                             <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-2">
-                                                Street
+                                                Address Line 1
                                             </label>
                                             <input
                                                 type="text"
-                                                name="street"
-                                                value={formData.street}
+                                                name="addressLine1"
+                                                value={formData.addressLine1}
                                                 onChange={handleInputChange}
                                                 className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
+                                                placeholder="House no, building, street"
                                                 required
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-2">
+                                                Address Line 2
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="addressLine2"
+                                                value={formData.addressLine2}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
+                                                placeholder="Area, colony (optional)"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-2">
+                                                Landmark
+                                            </label>
+                                            <input
+                                                type="text"
+                                                name="landmark"
+                                                value={formData.landmark}
+                                                onChange={handleInputChange}
+                                                className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
+                                                placeholder="Near metro, school, mall (optional)"
                                             />
                                         </div>
 
@@ -280,6 +338,7 @@ function CheckoutPage() {
                                                 value={formData.city}
                                                 onChange={handleInputChange}
                                                 className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
+                                                placeholder="City"
                                                 required
                                             />
                                         </div>
@@ -294,13 +353,14 @@ function CheckoutPage() {
                                                 value={formData.state}
                                                 onChange={handleInputChange}
                                                 className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
+                                                placeholder="State"
                                                 required
                                             />
                                         </div>
 
                                         <div>
                                             <label className="block text-xs uppercase tracking-[0.2em] text-muted-foreground font-semibold mb-2">
-                                                ZIP Code
+                                                PIN / ZIP Code
                                             </label>
                                             <input
                                                 type="text"
@@ -308,6 +368,7 @@ function CheckoutPage() {
                                                 value={formData.zip}
                                                 onChange={handleInputChange}
                                                 className="w-full px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
+                                                placeholder="Postal code"
                                                 required
                                             />
                                         </div>
@@ -381,10 +442,7 @@ function CheckoutPage() {
                                     <span className="text-muted-foreground">Shipping</span>
                                     <span>₹{Math.round(shipping)}</span>
                                 </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Tax (8%)</span>
-                                    <span>₹{Math.round(tax)}</span>
-                                </div>
+                                {/* Tax row removed per request */}
                                 <div className="pt-3 border-t border-white/10 flex justify-between font-semibold text-base">
                                     <span>Total</span>
                                     <span className="text-gradient-neon">₹{Math.round(total)}</span>

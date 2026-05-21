@@ -3,6 +3,7 @@ import { createFileRoute, Link, useNavigate, useSearch } from "@tanstack/react-r
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import { useAuth } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
@@ -16,6 +17,8 @@ interface Order {
   id?: string;
   orderNumber?: string;
   orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+  shipmentStatus?: "not_created" | "pending" | "picked" | "shipped" | "delivered" | "cancelled";
+  trackingId?: string;
   totalAmount: number;
   orderedProducts: Array<{ name: string; quantity: number; price: number; image?: string }>;
   createdAt: string;
@@ -29,7 +32,15 @@ function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [successMessage, setSuccessMessage] = useState(search?.success ? "Payment successful! Your order is being processed." : "");
+  const [successMessage, setSuccessMessage] = useState(
+    search?.success ? search?.message || "Payment verified and order placed. Your order is being processed." : ""
+  );
+
+  useEffect(() => {
+    if (search?.success) {
+      toast.success(search?.message || "Payment verified and order placed. Your order is being processed.");
+    }
+  }, [search?.message, search?.success]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -103,6 +114,40 @@ function OrdersPage() {
     }
   };
 
+  const getShipmentStatusLabel = (status?: string) => {
+    switch (status) {
+      case "picked":
+        return "Picked";
+      case "shipped":
+        return "Shipped";
+      case "delivered":
+        return "Delivered";
+      case "cancelled":
+        return "Cancelled";
+      case "pending":
+        return "Pending";
+      case "not_created":
+      default:
+        return "Pending";
+    }
+  };
+
+  const getShipmentBadgeClass = (status?: string) => {
+    switch (status) {
+      case "delivered":
+        return "bg-green-500/10 border border-green-500/20 text-green-400";
+      case "shipped":
+      case "picked":
+        return "bg-blue-500/10 border border-blue-500/20 text-blue-400";
+      case "cancelled":
+        return "bg-red-500/10 border border-red-500/20 text-red-400";
+      case "pending":
+      case "not_created":
+      default:
+        return "bg-orange-500/10 border border-orange-500/20 text-orange-400";
+    }
+  };
+
   if (!isAuthenticated) return null;
 
   return (
@@ -146,10 +191,10 @@ function OrdersPage() {
               <div className="space-y-4">
                 {orders.map((order) => (
                   <div key={order._id || order.id} className="border border-white/10 rounded-lg p-6 hover:border-white/20 hover:bg-white/5 transition">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
                       <div>
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Order ID</div>
-                        <div className="text-sm font-semibold mt-1 font-mono">#{order.orderNumber || order._id?.slice(-6)}</div>
+                        <div className="text-sm font-semibold mt-1 font-mono">{order.orderNumber || order._id}</div>
                       </div>
                       <div>
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Items</div>
@@ -158,6 +203,17 @@ function OrdersPage() {
                       <div>
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Status</div>
                         <div className={`text-sm font-semibold mt-1 capitalize ${getStatusColor(order.orderStatus || "pending")}`}>{order.orderStatus || "pending"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Shipping</div>
+                        <div className={`inline-flex mt-1 px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
+                          {getShipmentStatusLabel(order.shipmentStatus)}
+                        </div>
+                        {order.trackingId && (
+                          <div className="text-xs text-muted-foreground mt-2 font-mono">
+                            Tracking: {order.trackingId}
+                          </div>
+                        )}
                       </div>
                       <div className="text-right">
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</div>

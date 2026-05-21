@@ -6,6 +6,7 @@ import { createNotification } from "../services/notificationService";
 import { User } from "../models/User";
 import { sendEmail, templates } from "../services/emailService";
 import { env } from "../config/env";
+import { OrderDocument } from "../models/Order";
 
 export const create = asyncHandler(async (req: Request, res: Response) => {
   const payload = { ...req.body, user: req.user?.id };
@@ -20,13 +21,19 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
   });
 
   const user = await User.findById(order.user);
+  const customerEmail = (req.body.customerEmail || user?.email || "").toString().trim().toLowerCase();
   if (user) {
     try {
-      // Send confirmation email to user
-      await sendEmail(user.email, "Order confirmation", templates.orderConfirmation(order.id));
-      console.log(`✅ Order confirmation email sent to ${user.email}`);
+      // Send detailed order notification email to user (fire-and-forget)
+      sendEmail(
+        customerEmail,
+        "Order Received - Morfyx Studio",
+        templates.customerOrderNotification(order as OrderDocument)
+      )
+        .then(info => console.log(`✉️ Order confirmation email queued to ${customerEmail} — messageId: ${info?.messageId}`))
+        .catch(emailError => console.error(`❌ Failed to send order confirmation email to ${customerEmail}:`, emailError));
     } catch (emailError) {
-      console.error(`❌ Failed to send order confirmation email to ${user.email}:`, emailError);
+      console.error(`❌ Failed to start send of order confirmation email to ${customerEmail}:`, emailError);
     }
 
     try {

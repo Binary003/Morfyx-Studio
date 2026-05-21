@@ -42,7 +42,8 @@ export const recordPaymentSuccess = async (payload: any) => {
     orderId: payload.razorpayOrderId,
     paymentId: payload.razorpayPaymentId,
     signature: payload.razorpaySignature,
-    status: "paid"
+    status: "paid",
+    advancePaid: true
   };
   order.orderStatus = "paid";
   await order.save();

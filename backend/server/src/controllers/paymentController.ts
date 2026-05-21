@@ -8,7 +8,8 @@ import { createNotification } from "../services/notificationService";
 import { shiprocketService } from "../services/shiprocketService";
 import { User } from "../models/User";
 import { sendEmail, templates } from "../services/emailService";
-import { Order } from "../models/Order";
+import { Order, OrderDocument } from "../models/Order";
+import { updateStockAfterPayment } from "../services/orderService";
 
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
   const { amount } = req.body;
@@ -86,28 +87,76 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
 
     console.log(`✅ Payment recorded: Advance ₹${advanceAmount}, COD ₹${remainingCOD}`);
 
-    // Create notification
-    await createNotification({
-      userId: String(order.user),
-      type: "payment",
-      title: "Advance payment received",
-      message: `₹${advanceAmount} received. Remaining ₹${remainingCOD} COD.`,
-      data: { orderId: order._id },
-    });
+    // Update product stock after successful payment
+    try {
+      await updateStockAfterPayment(orderId);
+      console.log("✅ Product stock updated successfully");
+    } catch (stockError: any) {
+      console.error("⚠️ Stock update failed:", stockError.message);
+      // Don't throw - stock update should not block payment verification
+    }
 
     const user = (order.user as any);
+    const userId = user?._id ? String(user._id) : String(order.user);
+    const customerName = user?.name || order.shippingInfo.name;
+
+    // Create notification as a best-effort side effect so payment verification
+    // can still complete even if notification persistence fails.
+    try {
+      await createNotification({
+        userId,
+        type: "order",
+        title: "Payment verified and order placed",
+        message: `Hi ${customerName}, we verified your payment of ₹${advanceAmount}. Your order is now confirmed and the remaining ₹${remainingCOD} will be collected on delivery.`,
+        data: {
+          orderId: order._id,
+          paymentStatus: "paid",
+          orderStatus: "processing",
+          advanceAmount,
+          remainingCOD
+        },
+      });
+    } catch (notificationError) {
+      console.error("⚠️ Failed to create payment notification:", notificationError);
+    }
+
+    try {
+      await createNotification({
+        type: "order",
+        title: "Order placed and payment verified",
+        message: `Order ${order._id} is paid and ready for shipment processing.`,
+        data: {
+          orderId: order._id,
+          paymentStatus: "paid",
+          orderStatus: "processing",
+          advanceAmount,
+          remainingCOD,
+          audience: "admin"
+        }
+      });
+    } catch (notificationError) {
+      console.error("⚠️ Failed to create admin payment notification:", notificationError);
+    }
 
     // Send payment confirmation email
-    if (user?.email) {
+    let userEmail = (order.customerEmail || user?.email) as string | undefined;
+    if (!userEmail) {
+      const fallbackUser = await User.findById(order.user).select("email");
+      userEmail = fallbackUser?.email;
+    }
+
+    if (userEmail) {
       try {
-        await sendEmail(
-          user.email,
+        // Send payment confirmation to user asynchronously so verification API isn't delayed
+        sendEmail(
+          userEmail,
           "Payment Received - Shipment Processing",
           templates.paymentConfirmation(order as OrderDocument)
-        );
-        console.log(`✅ Payment confirmation email sent to ${user.email}`);
+        )
+          .then(info => console.log(`✉️ Payment confirmation email queued to ${userEmail} — messageId: ${info?.messageId}`))
+          .catch(emailError => console.error(`❌ Failed to send payment email:`, emailError));
       } catch (emailError) {
-        console.error(`❌ Failed to send payment email:`, emailError);
+        console.error(`❌ Failed to start payment email send:`, emailError);
       }
     }
 
@@ -120,7 +169,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
         codAmount: remainingCOD, // Only 70% as COD
         subTotal: order.totalAmount,
         customerName: order.shippingInfo.name,
-        customerEmail: user?.email || "noreply@morfyx.com",
+        customerEmail: userEmail || "noreply@morfyx.com",
         customerPhone: order.shippingInfo.phone,
         address: order.shippingInfo.address,
         city: order.shippingInfo.city,
@@ -144,17 +193,54 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
 
       console.log(`✅ Shiprocket shipment created: ${shipmentResult.shipmentId}`);
 
-      // Send shipment confirmation email
-      if (user?.email) {
+      try {
+        await createNotification({
+          userId,
+          type: "shipment",
+          title: "Order ready to ship",
+          message: `Your order is confirmed and ready to ship. Tracking ID: ${shipmentResult.trackingId || shipmentResult.shipmentId}.`,
+          data: {
+            orderId: order._id,
+            trackingId: shipmentResult.trackingId || shipmentResult.shipmentId,
+            shipmentId: shipmentResult.shipmentId,
+            orderStatus: order.orderStatus,
+            shipmentStatus: order.shipmentStatus
+          },
+        });
+      } catch (notificationError) {
+        console.error("⚠️ Failed to create shipment notification:", notificationError);
+      }
+
+      try {
+        await createNotification({
+          type: "shipment",
+          title: "Order ready to ship",
+          message: `Order ${order._id} is ready to ship with tracking ID ${shipmentResult.trackingId || shipmentResult.shipmentId}.`,
+          data: {
+            orderId: order._id,
+            trackingId: shipmentResult.trackingId || shipmentResult.shipmentId,
+            shipmentId: shipmentResult.shipmentId,
+            orderStatus: order.orderStatus,
+            shipmentStatus: order.shipmentStatus,
+            audience: "admin"
+          },
+        });
+      } catch (notificationError) {
+        console.error("⚠️ Failed to create admin shipment notification:", notificationError);
+      }
+
+      // Send shipment confirmation email (async)
+      if (userEmail) {
         try {
-          await sendEmail(
-            user.email,
+          sendEmail(
+            userEmail,
             "Order Shipped",
             templates.shipmentTracking(order as OrderDocument, shipmentResult.trackingId || shipmentResult.shipmentId)
-          );
-          console.log(`✅ Shipment confirmation email sent to ${user.email}`);
+          )
+            .then(info => console.log(`✉️ Shipment confirmation email queued to ${userEmail} — messageId: ${info?.messageId}`))
+            .catch(emailError => console.error(`❌ Failed to send shipment email:`, emailError));
         } catch (emailError) {
-          console.error(`❌ Failed to send shipment email:`, emailError);
+          console.error(`❌ Failed to start shipment email send:`, emailError);
         }
       }
 
@@ -171,10 +257,14 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
       }
 
       console.log("✅ Payment verification complete with shipment!");
-      sendSuccess(res, { order, shipment: shipmentResult }, "Payment verified and shipment created");
+      sendSuccess(res, { order, shipment: shipmentResult }, "Payment verified and order placed");
     } catch (shipmentError: any) {
       console.error("⚠️  Shipment creation failed:", shipmentError.message);
       console.error("⚠️  Order remains in 'processing' state. Shipment can be created manually by admin.");
+
+      order.orderStatus = "processing";
+      order.shipmentStatus = "pending";
+      await order.save();
 
       // Send notification to admin to create shipment manually
       try {
@@ -191,7 +281,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
       sendSuccess(
         res,
         { order },
-        "Payment verified successfully. Shipment will be created shortly."
+        "Payment verified and order placed. Shipment will be created shortly."
       );
     }
   } catch (error: any) {

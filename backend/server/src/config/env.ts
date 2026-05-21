@@ -61,6 +61,7 @@ export const env = {
   emailApiKey: process.env.EMAIL_API_KEY,
   emailUser: process.env.EMAIL_USER as string,
   emailPass: process.env.EMAIL_PASS as string,
+  emailFrom: process.env.EMAIL_FROM || "orders@morfyxstudio.com",
   adminEmail: process.env.ADMIN_EMAIL || "admin@morfyx.com",
   frontendUrls,
   cookieDomain: process.env.COOKIE_DOMAIN || ""

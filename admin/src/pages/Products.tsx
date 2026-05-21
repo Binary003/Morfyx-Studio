@@ -70,6 +70,13 @@ export function ProductsPage() {
     // Fetch on initial mount and when page/category changes
     useEffect(() => {
         fetchData(page, selectedCategory);
+
+        // Set up periodic refetch every 30 seconds to catch stock changes
+        const interval = setInterval(() => {
+            fetchData(pageRef.current, categoryRef.current);
+        }, 30000);
+
+        return () => clearInterval(interval);
     }, [page, selectedCategory]);
 
     const handleDelete = async (id: string) => {

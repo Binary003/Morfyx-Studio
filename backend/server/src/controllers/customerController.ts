@@ -65,7 +65,11 @@ export const getCustomer = asyncHandler(async (req: Request, res: Response) => {
         .populate("wishlist");
 
     if (!customer) {
-        return sendSuccess(res, null, "Customer not found", 404);
+        res.status(404).json({
+            success: false,
+            message: "Customer not found"
+        });
+        return;
     }
 
     sendSuccess(res, { customer });

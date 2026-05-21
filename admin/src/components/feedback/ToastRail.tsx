@@ -1,15 +1,25 @@
 import { CheckCircle2, Info } from "lucide-react";
 
-const notifications = [
+type NotificationNote = {
+    id?: string;
+    title: string;
+    description: string;
+};
+
+const fallbackNotifications: NotificationNote[] = [
     { title: "New wholesale lead", description: "Neo Otaku Stores just submitted a request." },
     { title: "Stock alert", description: "Kaneki Black Requiem is below threshold." },
 ];
 
-export function ToastRail() {
+interface ToastRailProps {
+    notes?: NotificationNote[];
+}
+
+export function ToastRail({ notes = fallbackNotifications }: ToastRailProps) {
     return (
         <div className="space-y-3">
-            {notifications.map((note) => (
-                <div key={note.title} className="glass rounded-2xl border border-border/60 p-4">
+            {notes.map((note, index) => (
+                <div key={note.id || `${note.title}-${index}`} className="glass rounded-2xl border border-border/60 p-4">
                     <div className="flex items-center gap-3">
                         <div className="h-9 w-9 rounded-xl bg-neonCyan/20 grid place-items-center">
                             {note.title.includes("Stock") ? (

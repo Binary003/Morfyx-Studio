@@ -21,6 +21,8 @@ export interface UserDocument extends Document {
   wishlist: Types.ObjectId[];
   orderHistory: Types.ObjectId[];
   role: "customer" | "admin";
+  createdAt: Date;
+  updatedAt: Date;
   comparePassword: (candidate: string) => Promise<boolean>;
 }
 
