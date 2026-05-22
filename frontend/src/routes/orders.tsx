@@ -17,6 +17,9 @@ interface Order {
   id?: string;
   orderNumber?: string;
   orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentInfo?: {
+    status?: "pending" | "paid" | "failed";
+  };
   shipmentStatus?: "not_created" | "pending" | "picked" | "shipped" | "delivered" | "cancelled";
   trackingId?: string;
   totalAmount: number;
@@ -148,6 +151,30 @@ function OrdersPage() {
     }
   };
 
+  const getPaymentStatusLabel = (status?: string) => {
+    switch (status) {
+      case "paid":
+        return "Paid";
+      case "failed":
+        return "Failed";
+      case "pending":
+      default:
+        return "Pending";
+    }
+  };
+
+  const getPaymentBadgeClass = (status?: string) => {
+    switch (status) {
+      case "paid":
+        return "bg-green-500/10 border border-green-500/20 text-green-400";
+      case "failed":
+        return "bg-red-500/10 border border-red-500/20 text-red-400";
+      case "pending":
+      default:
+        return "bg-orange-500/10 border border-orange-500/20 text-orange-400";
+    }
+  };
+
   if (!isAuthenticated) return null;
 
   return (
@@ -190,34 +217,36 @@ function OrdersPage() {
 
               <div className="space-y-4">
                 {orders.map((order) => (
-                  <div key={order._id || order.id} className="border border-white/10 rounded-lg p-6 hover:border-white/20 hover:bg-white/5 transition">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-5">
-                      <div>
+                  <div key={order._id || order.id} className="border border-white/10 rounded-2xl p-5 sm:p-6 hover:border-white/20 hover:bg-white/5 transition">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                      <div className="min-w-0 flex-1">
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Order ID</div>
-                        <div className="text-sm font-semibold mt-1 font-mono">{order.orderNumber || order._id}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Items</div>
-                        <div className="text-sm font-semibold mt-1">{order.orderedProducts?.length || 0}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Status</div>
-                        <div className={`text-sm font-semibold mt-1 capitalize ${getStatusColor(order.orderStatus || "pending")}`}>{order.orderStatus || "pending"}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Shipping</div>
-                        <div className={`inline-flex mt-1 px-2 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
-                          {getShipmentStatusLabel(order.shipmentStatus)}
+                        <div className="mt-1 font-mono text-xs sm:text-sm font-semibold leading-5 break-all text-white/90">
+                          {order.orderNumber || order._id}
                         </div>
-                        {order.trackingId && (
-                          <div className="text-xs text-muted-foreground mt-2 font-mono">
-                            Tracking: {order.trackingId}
-                          </div>
-                        )}
+                        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                          <span>{order.orderedProducts?.length || 0} item{(order.orderedProducts?.length || 0) === 1 ? "" : "s"}</span>
+                          <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</div>
-                        <div className="text-lg font-bold mt-1 text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+
+                      <div className="flex flex-col items-start gap-3 sm:items-end sm:text-right shrink-0">
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Payment</div>
+                          <div className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getPaymentBadgeClass(order.paymentInfo?.status)}`}>
+                            {getPaymentStatusLabel(order.paymentInfo?.status)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Shipping</div>
+                          <div className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
+                            {getShipmentStatusLabel(order.shipmentStatus)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</div>
+                          <div className="text-lg font-bold mt-1 text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                        </div>
                       </div>
                     </div>
 
@@ -235,12 +264,12 @@ function OrdersPage() {
                       </div>
                     )}
 
-                    <div className="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
-                      <div className="text-xs text-muted-foreground">{new Date(order.createdAt).toLocaleDateString()}</div>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getStatusBadgeClass(order.orderStatus)}`}>
-                        {order.orderStatus}
-                      </span>
-                    </div>
+                    {order.trackingId && (
+                      <div className="mt-4 pt-4 border-t border-white/10 text-sm text-muted-foreground">
+                        <span className="uppercase tracking-[0.2em] text-xs">Tracking</span>
+                        <div className="mt-1 font-mono text-xs sm:text-sm break-all">{order.trackingId}</div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

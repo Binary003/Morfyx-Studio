@@ -14,7 +14,7 @@ export const Route = createFileRoute("/admin")({
 
 const stats = [
   { v: "184", l: "Orders this week" },
-  { v: "$48.2K", l: "Revenue (7d)" },
+  { v: "₹48.2K", l: "Revenue (7d)" },
   { v: "27", l: "New enquiries" },
   { v: "12", l: "Custom in production" },
 ];
@@ -70,10 +70,10 @@ function AdminPage() {
                 </thead>
                 <tbody className="divide-y divide-border/40">
                   {[
-                    ["#10231", "Hiro T.", "Yumi — Neon City", "Shipped", "$649"],
-                    ["#10230", "Sara K.", "Kurogane Samurai 1/6", "Packing", "$289"],
-                    ["#10229", "Marcus L.", "Custom Gojo Commission", "In Production", "$520"],
-                    ["#10228", "Aiko R.", "Rem Wedding Ver.", "Delivered", "$429"],
+                    ["#10231", "Hiro T.", "Yumi — Neon City", "Shipped", "₹649"],
+                    ["#10230", "Sara K.", "Kurogane Samurai 1/6", "Packing", "₹289"],
+                    ["#10229", "Marcus L.", "Custom Gojo Commission", "In Production", "₹520"],
+                    ["#10228", "Aiko R.", "Rem Wedding Ver.", "Delivered", "₹429"],
                   ].map((r, i) => (
                     <tr key={i} className="py-3">
                       {r.map((c, j) => <td key={j} className={`py-3 ${j === 4 ? "text-right font-display text-gradient-neon font-bold" : ""}`}>{c}</td>)}

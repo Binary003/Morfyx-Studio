@@ -75,8 +75,8 @@ export const getAllOrders = async () => {
   // Transform data for admin display
   return orders.map((order: any) => ({
     _id: order._id,
-    customer: order.user?.name || "Unknown",
-    customerEmail: order.user?.email,
+    customer: order.shippingInfo?.name || order.user?.name || "Unknown",
+    customerEmail: order.customerEmail || order.user?.email || "N/A",
     orderStatus: order.orderStatus || "pending",
     paymentStatus: order.paymentInfo?.status || "pending",
     total: order.totalAmount,

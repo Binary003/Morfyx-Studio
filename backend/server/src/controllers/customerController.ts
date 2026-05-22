@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { asyncHandler } from "../utils/asyncHandler";
 import { sendSuccess } from "../utils/response";
 import { User } from "../models/User";
+import { Order } from "../models/Order";
 
 export const getAllCustomers = asyncHandler(async (req: Request, res: Response) => {
     const { page = 1, limit = 20, search = "" } = req.query;
@@ -32,14 +33,56 @@ export const getAllCustomers = asyncHandler(async (req: Request, res: Response) 
         .skip(skip)
         .limit(limitNum);
 
+    const customerIds = customers.map((customer) => customer._id);
+    const customerEmails = customers.map((customer) => customer.email.trim().toLowerCase());
+    const customerMap = new Map<string, { totalOrders: number; totalSpent: number; orderIds: Set<string> }>();
+    const emailToCustomerId = new Map<string, string>();
+
+    customers.forEach((customer) => {
+        const customerId = String(customer._id);
+        customerMap.set(customerId, { totalOrders: 0, totalSpent: 0, orderIds: new Set<string>() });
+        emailToCustomerId.set(customer.email.trim().toLowerCase(), customerId);
+    });
+
+    const matchingOrders = customerIds.length > 0
+        ? await Order.find({
+            $or: [
+                { user: { $in: customerIds } },
+                { customerEmail: { $in: customerEmails } }
+            ]
+        })
+            .select("_id user customerEmail totalAmount")
+            .lean()
+        : [];
+
+    for (const order of matchingOrders) {
+        const orderId = String(order._id);
+        const userId = order.user ? String(order.user) : "";
+        const emailKey = (order.customerEmail || "").trim().toLowerCase();
+        const matchedCustomerId = customerMap.has(userId) ? userId : (emailToCustomerId.get(emailKey) || "");
+
+        if (!matchedCustomerId) {
+            continue;
+        }
+
+        const bucket = customerMap.get(matchedCustomerId);
+        if (!bucket || bucket.orderIds.has(orderId)) {
+            continue;
+        }
+
+        bucket.orderIds.add(orderId);
+        bucket.totalOrders += 1;
+        bucket.totalSpent += Number(order.totalAmount || 0);
+    }
+
     const items = customers.map((customer) => ({
         _id: customer._id,
         name: customer.name,
         email: customer.email,
         phone: customer.phone || "N/A",
         orderHistory: customer.orderHistory || [],
-        totalOrders: customer.orderHistory?.length || 0,
-        totalSpent: (customer.orderHistory as any[])?.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0) || 0,
+        totalOrders: customerMap.get(String(customer._id))?.totalOrders || 0,
+        totalSpent: customerMap.get(String(customer._id))?.totalSpent || 0,
         createdAt: customer.createdAt
     }));
 

@@ -5,7 +5,7 @@ import { X, Upload, Send, Sparkles } from "lucide-react";
 const WHATSAPP_NUMBER = "919999999999"; // replace with admin number (no +)
 
 type Ctx = { open: () => void; close: () => void };
-const ModalCtx = createContext<Ctx>({ open: () => {}, close: () => {} });
+const ModalCtx = createContext<Ctx>({ open: () => { }, close: () => { } });
 
 export const useCustomFigureModal = () => useContext(ModalCtx);
 
@@ -58,7 +58,7 @@ function Modal({ onClose }: { onClose: () => void }) {
         <form onSubmit={submit} className="mt-6 grid sm:grid-cols-2 gap-4">
           <Field label="Your Name" required value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="Hiro Tanaka" />
           <Field label="Anime Character" required value={form.character} onChange={(v) => setForm({ ...form, character: v })} placeholder="Gojo Satoru" />
-          <Field label="Budget (USD)" required value={form.budget} onChange={(v) => setForm({ ...form, budget: v })} placeholder="$300 – $500" />
+          <Field label="Budget (INR)" required value={form.budget} onChange={(v) => setForm({ ...form, budget: v })} placeholder="₹30,000 – ₹50,000" />
           <FileField fileName={fileName} onChange={setFileName} />
           <div className="sm:col-span-2 flex flex-col gap-2">
             <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Description</label>

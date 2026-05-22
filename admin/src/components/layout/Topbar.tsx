@@ -10,7 +10,6 @@ import { useAuthStore } from "../../store/authStore";
 const titles: Record<string, string> = {
     "/": "Dashboard",
     "/products": "Products",
-    "/imported-products": "Imported Products",
     "/categories": "Categories",
     "/orders": "Orders",
     "/customers": "Customers",

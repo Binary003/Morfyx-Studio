@@ -1,4 +1,7 @@
-const offers = [
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+
+const defaultOffers = [
     "Limited time: 15% off all imported figures",
     "Free shipping on orders over Rs. 2999",
     "Bundle deal: Buy 2 get 10% extra off",
@@ -6,6 +9,31 @@ const offers = [
 ];
 
 export function OffersStrip() {
+    const [offers, setOffers] = useState(defaultOffers);
+
+    useEffect(() => {
+        let active = true;
+
+        const loadOffers = async () => {
+            try {
+                const response = await api.getOffers();
+                const items = response.data?.offerStrip?.items;
+
+                if (active && Array.isArray(items) && items.length > 0) {
+                    setOffers(items);
+                }
+            } catch {
+                // Keep the default strip text if the backend is unavailable.
+            }
+        };
+
+        loadOffers();
+
+        return () => {
+            active = false;
+        };
+    }, []);
+
     return (
         <div className="fixed top-0 left-0 right-0 z-[60] h-9 border-b border-border/60 bg-secondary/40 backdrop-blur-lg">
             <div

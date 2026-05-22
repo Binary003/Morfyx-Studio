@@ -22,6 +22,7 @@ import wishlistRoutes from "./routes/wishlist.routes";
 import analyticsRoutes from "./routes/analytics.routes";
 import inventoryRoutes from "./routes/inventory.routes";
 import notificationRoutes from "./routes/notification.routes";
+import offerStripRoutes from "./routes/offerStrip.routes";
 
 const app = express();
 
@@ -68,6 +69,7 @@ app.use("/api/wishlist", wishlistRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/inventory", inventoryRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/offers", offerStripRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

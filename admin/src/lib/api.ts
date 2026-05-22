@@ -221,6 +221,18 @@ class AdminApiClient {
         });
     }
 
+    // Offers / Offer strip
+    async getOffers() {
+        return this.request<any>("/offers");
+    }
+
+    async updateOffers(data: { items: string[] }) {
+        return this.request("/offers", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        });
+    }
+
     async getOrders(params?: {
         page?: number;
         limit?: number;

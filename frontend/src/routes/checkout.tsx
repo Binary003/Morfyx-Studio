@@ -52,9 +52,8 @@ function CheckoutPage() {
         }
     }, [isAuthenticated, items.length, navigate]);
 
-    const shipping = itemCount > 0 ? 18 : 0;
     const tax = 0; // removed tax calculation
-    const total = subtotal + shipping;
+    const total = subtotal;
 
     // Payment breakdown: 30% advance now, 70% COD later
     const advanceAmount = Math.round(total * 0.30);
@@ -437,10 +436,6 @@ function CheckoutPage() {
                                 <div className="flex justify-between text-sm">
                                     <span className="text-muted-foreground">Subtotal</span>
                                     <span>₹{Math.round(subtotal)}</span>
-                                </div>
-                                <div className="flex justify-between text-sm">
-                                    <span className="text-muted-foreground">Shipping</span>
-                                    <span>₹{Math.round(shipping)}</span>
                                 </div>
                                 {/* Tax row removed per request */}
                                 <div className="pt-3 border-t border-white/10 flex justify-between font-semibold text-base">

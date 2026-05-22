@@ -3,7 +3,6 @@ import { AdminLayout } from "./components/layout/AdminLayout";
 import { RequireAuth } from "./components/auth/RequireAuth";
 import { DashboardPage } from "./pages/Dashboard";
 import { ProductsPage } from "./pages/Products";
-import { ImportedProductsPage } from "./pages/ImportedProducts";
 import { CategoriesPage } from "./pages/Categories";
 import { OrdersPage } from "./pages/Orders";
 import { CustomersPage } from "./pages/Customers";
@@ -34,7 +33,6 @@ export const router = createBrowserRouter([
             { path: "products", element: <ProductsPage /> },
             { path: "products/new", element: <ProductFormPage /> },
             { path: "products/:id", element: <ProductFormPage /> },
-            { path: "imported-products", element: <ImportedProductsPage /> },
             { path: "categories", element: <CategoriesPage /> },
             { path: "orders", element: <OrdersPage /> },
             { path: "customers", element: <CustomersPage /> },

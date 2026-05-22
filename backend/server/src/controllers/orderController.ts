@@ -9,7 +9,12 @@ import { env } from "../config/env";
 import { OrderDocument } from "../models/Order";
 
 export const create = asyncHandler(async (req: Request, res: Response) => {
-  const payload = { ...req.body, user: req.user?.id };
+  const user = await User.findById(req.user?.id);
+  const payload = {
+    ...req.body,
+    user: req.user?.id,
+    customerEmail: (req.body.customerEmail || user?.email || "").toString().trim().toLowerCase()
+  };
   const order = await createOrder(payload);
 
   await createNotification({
@@ -20,9 +25,8 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
     data: { orderId: order.id }
   });
 
-  const user = await User.findById(order.user);
-  const customerEmail = (req.body.customerEmail || user?.email || "").toString().trim().toLowerCase();
-  if (user) {
+  const customerEmail = (payload.customerEmail || "").toString().trim().toLowerCase();
+  if (customerEmail) {
     try {
       // Send detailed order notification email to user (fire-and-forget)
       sendEmail(
@@ -35,7 +39,11 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
     } catch (emailError) {
       console.error(`❌ Failed to start send of order confirmation email to ${customerEmail}:`, emailError);
     }
+  } else {
+    console.warn(`⚠️ Order ${order.id} has no customer email, skipping customer confirmation email`);
+  }
 
+  if (user) {
     try {
       // Send notification email to admin
       await sendEmail(

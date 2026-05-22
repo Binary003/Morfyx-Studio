@@ -40,7 +40,7 @@ export function LimitedEdition() {
                 <div className="text-[10px] uppercase tracking-[0.3em] text-accent">Edition {d.edition}</div>
                 <h3 className="font-display text-2xl font-bold mt-2">{d.name}</h3>
                 <div className="flex items-end justify-between mt-4">
-                  <div className="font-display text-3xl font-bold text-gradient-neon">${d.price}</div>
+                  <div className="font-display text-3xl font-bold text-gradient-neon">₹{d.price}</div>
                   <button className="rounded-full bg-[var(--gradient-neon)] px-5 py-2.5 text-sm font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
                     Reserve
                   </button>

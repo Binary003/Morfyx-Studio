@@ -86,7 +86,7 @@ export function Showcase3D() {
               <div className="mt-auto flex items-center justify-between gap-4 pt-4 border-t border-border/60">
                 <div>
                   <div className="text-xs text-muted-foreground">Pre-order</div>
-                  <div className="font-display text-3xl font-bold text-gradient-neon">$649</div>
+                  <div className="font-display text-3xl font-bold text-gradient-neon">₹649</div>
                 </div>
                 <button className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
                   Reserve Now

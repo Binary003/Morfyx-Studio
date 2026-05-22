@@ -50,7 +50,7 @@ export function FeaturedCarousel() {
                 </div>
                 <p className="text-muted-foreground">{s.desc}</p>
                 <div className="flex items-center gap-4 mt-2">
-                  <div className="font-display text-4xl font-bold text-gradient-neon">${s.price}</div>
+                  <div className="font-display text-4xl font-bold text-gradient-neon">₹{s.price}</div>
                   <button className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
                     Shop Now
                   </button>

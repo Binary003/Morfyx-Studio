@@ -63,9 +63,9 @@ export function Trending() {
                 <h3 className="font-medium leading-snug">{p.name}</h3>
                 <div className="mt-auto flex items-end justify-between gap-3">
                   <div>
-                    <div className="font-display text-2xl font-bold text-gradient-neon">${p.price}</div>
+                    <div className="font-display text-2xl font-bold text-gradient-neon">₹{p.price}</div>
                     {p.old && (
-                      <div className="text-xs text-muted-foreground line-through">${p.old}</div>
+                      <div className="text-xs text-muted-foreground line-through">₹{p.old}</div>
                     )}
                   </div>
                   <button

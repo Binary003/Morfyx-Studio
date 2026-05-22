@@ -69,6 +69,10 @@ class ApiClient {
         return this.request<any>("/categories");
     }
 
+    async getOffers() {
+        return this.request<any>("/offers");
+    }
+
     // Orders
     async createOrder(orderData: any) {
         return this.request("/orders", {

@@ -56,6 +56,18 @@ const shipmentMap: Record<string, "info" | "success" | "warning" | "danger"> = {
     cancelled: "danger",
 };
 
+const orderDateFormatter = new Intl.DateTimeFormat("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+});
+
+function formatOrderDate(date: string) {
+    return orderDateFormatter.format(new Date(date));
+}
+
 export function OrdersPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
@@ -196,9 +208,17 @@ export function OrdersPage() {
                         <TableBody>
                             {filtered.map((order) => (
                                 <TableRow key={order._id}>
-                                    <TableCell className="text-xs font-mono">{order._id}</TableCell>
+                                    <TableCell>
+                                        <div className="text-xs font-mono">{order._id}</div>
+                                        <div className="mt-1 text-[11px] text-gray-500">
+                                            Ordered on {formatOrderDate(order.createdAt)}
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <div className="text-sm font-medium">{order.customer}</div>
+                                        <div className="mt-1 text-[11px] font-medium uppercase tracking-wide text-gray-500">
+                                            {order.orderStatus}
+                                        </div>
                                         <div className="text-xs text-gray-500">{order.customerEmail || 'N/A'}</div>
                                         <div className="text-xs text-gray-500 mt-1">📞 {order.shippingInfo?.phone || 'N/A'}</div>
                                     </TableCell>

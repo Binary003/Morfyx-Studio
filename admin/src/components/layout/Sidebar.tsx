@@ -2,7 +2,6 @@ import { NavLink } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
     BarChart3,
-    Boxes,
     CalendarClock,
     ClipboardList,
     Cog,
@@ -24,7 +23,6 @@ import { cn } from "../../utils/cn";
 const navItems = [
     { label: "Dashboard", to: "/", icon: Home },
     { label: "Products", to: "/products", icon: Package },
-    { label: "Imported Products", to: "/imported-products", icon: Boxes },
     { label: "Categories", to: "/categories", icon: Grid3X3 },
     { label: "Orders", to: "/orders", icon: ShoppingBag },
     { label: "Customers", to: "/customers", icon: Users },

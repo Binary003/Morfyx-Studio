@@ -12,7 +12,12 @@ interface Customer {
     email: string;
     phone?: string;
     orderHistory: any[];
+    totalOrders?: number;
     createdAt: string;
+}
+
+function getCustomerOrderCount(customer: Customer) {
+    return customer.totalOrders ?? customer.orderHistory?.length ?? 0;
 }
 
 export function CustomersPage() {
@@ -68,8 +73,8 @@ export function CustomersPage() {
                             <div className="text-lg font-semibold">{customer.name}</div>
                             <div className="text-xs text-mutedForeground">{customer.email}</div>
                             <div className="mt-3 flex items-center gap-2">
-                                <Badge variant={customer.orderHistory.length > 3 ? "success" : "default"}>
-                                    {customer.orderHistory.length} orders
+                                <Badge variant={getCustomerOrderCount(customer) > 3 ? "success" : "default"}>
+                                    {getCustomerOrderCount(customer)} total orders
                                 </Badge>
                                 <span className="text-xs text-mutedForeground">Active</span>
                             </div>
@@ -94,7 +99,7 @@ export function CustomersPage() {
                                 <TableRow key={customer._id}>
                                     <TableCell>{customer.name}</TableCell>
                                     <TableCell>{customer.email}</TableCell>
-                                    <TableCell>{customer.orderHistory.length}</TableCell>
+                                    <TableCell>{getCustomerOrderCount(customer)}</TableCell>
                                     <TableCell>
                                         {new Date(customer.createdAt).toLocaleDateString()}
                                     </TableCell>

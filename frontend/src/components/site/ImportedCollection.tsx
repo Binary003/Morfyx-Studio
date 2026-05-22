@@ -32,7 +32,7 @@ export function ImportedCollection() {
               <h3 className="font-display text-3xl sm:text-4xl font-bold mt-2">Rem — Wedding Ver. 1/7 Scale</h3>
               <p className="text-muted-foreground mt-2 max-w-md">Officially licensed by Good Smile Company. Sealed in original packaging.</p>
               <div className="mt-5 flex items-end justify-between gap-4">
-                <div className="font-display text-3xl font-bold text-gradient-neon">$429</div>
+                <div className="font-display text-3xl font-bold text-gradient-neon">₹429</div>
                 <button className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
                   Add to Cart
                 </button>
