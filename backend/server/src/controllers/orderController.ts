@@ -71,7 +71,7 @@ export const allOrders = asyncHandler(async (_req: Request, res: Response) => {
 });
 
 export const updateStatus = asyncHandler(async (req: Request, res: Response) => {
-  const order = await updateOrderStatus(req.params.id, req.body.status, req.body.trackingId);
+  const order = await updateOrderStatus(req.params.id, req.body.status, req.body.trackingId, req.body.shipmentStatus);
   sendSuccess(res, { order }, "Order updated");
 });
 

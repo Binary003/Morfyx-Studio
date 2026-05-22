@@ -5,7 +5,6 @@ import { env } from "../config/env";
 import { ApiError } from "../utils/apiError";
 import { createRazorpayOrder, recordPaymentFailure, recordPaymentSuccess, verifyRazorpaySignature } from "../services/paymentService";
 import { createNotification } from "../services/notificationService";
-import { shiprocketService } from "../services/shiprocketService";
 import { User } from "../models/User";
 import { sendEmail, templates } from "../services/emailService";
 import { Order, OrderDocument } from "../models/Order";
@@ -82,7 +81,8 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
       status: "paid",
       advancePaid: true,
     };
-    order.orderStatus = "paid";
+    order.orderStatus = "processing";
+    order.shipmentStatus = "not_created";
     await order.save();
 
     console.log(`✅ Payment recorded: Advance ₹${advanceAmount}, COD ₹${remainingCOD}`);
@@ -124,7 +124,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
       await createNotification({
         type: "order",
         title: "Order placed and payment verified",
-        message: `Order ${order._id} is paid and ready for shipment processing.`,
+        message: `Order ${order._id} is paid and ready for manual shipment processing.`,
         data: {
           orderId: order._id,
           paymentStatus: "paid",
@@ -160,130 +160,23 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
       }
     }
 
-    // Create Shiprocket shipment
-    console.log("🔵 Creating Shiprocket shipment with COD...");
+    order.orderStatus = "processing";
+    order.shipmentStatus = "not_created";
+    await order.save();
+
     try {
-      const shipmentResult = await shiprocketService.createShipment({
-        orderId: order._id.toString(),
-        totalAmount: order.totalAmount,
-        codAmount: remainingCOD, // Only 70% as COD
-        subTotal: order.totalAmount,
-        customerName: order.shippingInfo.name,
-        customerEmail: userEmail || "noreply@morfyx.com",
-        customerPhone: order.shippingInfo.phone,
-        address: order.shippingInfo.address,
-        city: order.shippingInfo.city,
-        state: order.shippingInfo.state,
-        postalCode: order.shippingInfo.postalCode,
-        country: order.shippingInfo.country,
-        items: order.orderedProducts.map((p) => ({
-          name: p.name,
-          quantity: p.quantity,
-          price: p.price,
-        })),
-      });
-
-      // Update order with shipment details
-      order.shipmentId = shipmentResult.shipmentId;
-      order.shiprocketOrderId = shipmentResult.orderId;
-      order.trackingId = shipmentResult.trackingId;
-      order.shipmentStatus = "pending";
-      order.orderStatus = "processing";
-      await order.save();
-
-      console.log(`✅ Shiprocket shipment created: ${shipmentResult.shipmentId}`);
-
-      try {
-        await createNotification({
-          userId,
-          type: "shipment",
-          title: "Order ready to ship",
-          message: `Your order is confirmed and ready to ship. Tracking ID: ${shipmentResult.trackingId || shipmentResult.shipmentId}.`,
-          data: {
-            orderId: order._id,
-            trackingId: shipmentResult.trackingId || shipmentResult.shipmentId,
-            shipmentId: shipmentResult.shipmentId,
-            orderStatus: order.orderStatus,
-            shipmentStatus: order.shipmentStatus
-          },
-        });
-      } catch (notificationError) {
-        console.error("⚠️ Failed to create shipment notification:", notificationError);
-      }
-
-      try {
-        await createNotification({
-          type: "shipment",
-          title: "Order ready to ship",
-          message: `Order ${order._id} is ready to ship with tracking ID ${shipmentResult.trackingId || shipmentResult.shipmentId}.`,
-          data: {
-            orderId: order._id,
-            trackingId: shipmentResult.trackingId || shipmentResult.shipmentId,
-            shipmentId: shipmentResult.shipmentId,
-            orderStatus: order.orderStatus,
-            shipmentStatus: order.shipmentStatus,
-            audience: "admin"
-          },
-        });
-      } catch (notificationError) {
-        console.error("⚠️ Failed to create admin shipment notification:", notificationError);
-      }
-
-      // Send shipment confirmation email (async)
-      if (userEmail) {
-        try {
-          sendEmail(
-            userEmail,
-            "Order Shipped",
-            templates.shipmentTracking(order as OrderDocument, shipmentResult.trackingId || shipmentResult.shipmentId)
-          )
-            .then(info => console.log(`✉️ Shipment confirmation email queued to ${userEmail} — messageId: ${info?.messageId}`))
-            .catch(emailError => console.error(`❌ Failed to send shipment email:`, emailError));
-        } catch (emailError) {
-          console.error(`❌ Failed to start shipment email send:`, emailError);
-        }
-      }
-
-      // Send admin notification
-      try {
-        await sendEmail(
-          env.adminEmail,
-          "New Order Received - Ready to Ship",
-          templates.adminPaymentNotification(order as OrderDocument)
-        );
-        console.log(`✅ Admin notification sent`);
-      } catch (emailError) {
-        console.error(`❌ Failed to send admin email:`, emailError);
-      }
-
-      console.log("✅ Payment verification complete with shipment!");
-      sendSuccess(res, { order, shipment: shipmentResult }, "Payment verified and order placed");
-    } catch (shipmentError: any) {
-      console.error("⚠️  Shipment creation failed:", shipmentError.message);
-      console.error("⚠️  Order remains in 'processing' state. Shipment can be created manually by admin.");
-
-      order.orderStatus = "processing";
-      order.shipmentStatus = "pending";
-      await order.save();
-
-      // Send notification to admin to create shipment manually
-      try {
-        await sendEmail(
-          env.adminEmail,
-          "⚠️ Manual Shipment Required",
-          `Order ${order._id} paid successfully but Shiprocket shipment creation failed. Please create shipment manually.`
-        );
-      } catch (e) {
-        console.error("Failed to send admin alert");
-      }
-
-      // Still return success - order is paid, shipment can be retried
-      sendSuccess(
-        res,
-        { order },
-        "Payment verified and order placed. Shipment will be created shortly."
+      await sendEmail(
+        env.adminEmail,
+        "New Order Received - Manual Shipment Required",
+        templates.adminPaymentNotification(order as OrderDocument)
       );
+      console.log(`✅ Admin notification sent`);
+    } catch (emailError) {
+      console.error(`❌ Failed to send admin email:`, emailError);
     }
+
+    console.log("✅ Payment verification complete. Shipment will be handled manually by admin.");
+    sendSuccess(res, { order }, "Payment verified and order placed. Shipment will be handled manually.");
   } catch (error: any) {
     console.error("❌ Payment verification failed:", error.message);
     throw error;

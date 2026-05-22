@@ -78,7 +78,7 @@ export function OffersPage() {
             setError("");
             setSuccess("");
             const response = await adminApi.updateOffers({ items: cleanedOffers });
-            const items = response.data?.offerStrip?.items;
+            const items = (response as any)?.data?.offerStrip?.items;
             setOffers(
                 Array.isArray(items) && items.length > 0
                     ? items.map((text: string) => createOfferItem(text))

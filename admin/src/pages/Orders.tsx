@@ -74,6 +74,7 @@ export function OrdersPage() {
     const [error, setError] = useState("");
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
+    const [shipmentSaveState, setShipmentSaveState] = useState<Record<string, "idle" | "saving" | "saved" | "error">>({});
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -114,34 +115,30 @@ export function OrdersPage() {
         }
     };
 
-    const refreshShipment = async (orderId: string, shipmentId?: string) => {
-        if (!shipmentId) return;
+    const updateShipmentDetails = async (orderId: string, shipmentStatus?: string, trackingId?: string) => {
         try {
-            const res = await adminApi.getShipment(shipmentId);
-            const data = res.data || res;
-            setOrders((prev) => prev.map((o) => o._id === orderId ? { ...o, shipmentStatus: data.status || data.shipmentStatus, trackingId: data.trackingNumber || o.trackingId } : o));
+            setShipmentSaveState((prev) => ({ ...prev, [orderId]: "saving" }));
+            const currentOrder = orders.find((order) => order._id === orderId);
+            const res = await adminApi.updateOrder(orderId, {
+                status: currentOrder?.orderStatus,
+                shipmentStatus,
+                trackingId,
+            });
+            const updated = (res as any)?.data?.order || (res as any)?.order || res;
+            setOrders((prev) => prev.map((o) => o._id === orderId ? {
+                ...o,
+                orderStatus: updated?.orderStatus || o.orderStatus,
+                shipmentStatus: updated?.shipmentStatus || shipmentStatus || o.shipmentStatus,
+                trackingId: updated?.trackingId || trackingId || o.trackingId,
+            } : o));
+            setShipmentSaveState((prev) => ({ ...prev, [orderId]: "saved" }));
+            window.setTimeout(() => {
+                setShipmentSaveState((prev) => (prev[orderId] === "saved" ? { ...prev, [orderId]: "idle" } : prev));
+            }, 1800);
         } catch (err) {
-            console.error("Failed to refresh shipment:", err);
-        }
-    };
-
-    const createShipmentManually = async (orderId: string) => {
-        try {
-            const res = await adminApi.createShipment(orderId);
-            const order = res?.data?.order;
-            const shipment = res?.data?.shipment;
-            setOrders((prev) => prev.map((o) => o._id === orderId
-                ? {
-                    ...o,
-                    shipmentId: order?.shipmentId || shipment?.shipmentId || o.shipmentId,
-                    trackingId: order?.trackingId || shipment?.trackingId || o.trackingId,
-                    shipmentStatus: order?.shipmentStatus || "pending",
-                    orderStatus: order?.orderStatus || o.orderStatus,
-                }
-                : o));
-        } catch (err) {
-            console.error("Failed to create shipment manually:", err);
-            alert("Failed to create shipment. Please check Shiprocket credentials/logs.");
+            console.error("Failed to update shipment details:", err);
+            setShipmentSaveState((prev) => ({ ...prev, [orderId]: "error" }));
+            alert("Failed to update shipment details.");
         }
     };
 
@@ -244,31 +241,54 @@ export function OrdersPage() {
                                     </TableCell>
                                     <TableCell>
                                         <div className="text-sm">
-                                            {order.shipmentId ? (
-                                                <>
-                                                    <div className="font-mono text-xs">{order.trackingId || order.shipmentId}</div>
-                                                    <div className="flex items-center gap-2 mt-1">
-                                                        <Badge variant={shipmentMap[order.shipmentStatus || "not_created"]}>
-                                                            {order.shipmentStatus || "Not Created"}
-                                                        </Badge>
-                                                        <button className="text-xs text-blue-500 underline" onClick={() => refreshShipment(order._id, order.shipmentId)}>Refresh</button>
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div className="space-y-2">
-                                                    <Badge variant={shipmentMap[order.shipmentStatus || "not_created"]}>
-                                                        {order.shipmentStatus || "not_created"}
-                                                    </Badge>
-                                                    {order.paymentStatus === "paid" && (
-                                                        <button
-                                                            className="text-xs text-blue-500 underline"
-                                                            onClick={() => createShipmentManually(order._id)}
-                                                        >
-                                                            Create Shipment
-                                                        </button>
-                                                    )}
-                                                </div>
-                                            )}
+                                            <div className="flex items-center gap-2">
+                                                <Badge variant={shipmentMap[order.shipmentStatus || "not_created"]}>
+                                                    {order.shipmentStatus || "not_created"}
+                                                </Badge>
+                                                {shipmentSaveState[order._id] === "saving" && (
+                                                    <span className="text-xs font-semibold text-blue-500">Saving...</span>
+                                                )}
+                                                {shipmentSaveState[order._id] === "saved" && (
+                                                    <span className="text-xs font-semibold text-green-500">Saved</span>
+                                                )}
+                                                {shipmentSaveState[order._id] === "error" && (
+                                                    <span className="text-xs font-semibold text-red-500">Save failed</span>
+                                                )}
+                                            </div>
+                                            <div className="mt-2 space-y-2">
+                                                <Input
+                                                    placeholder="Tracking ID"
+                                                    value={order.trackingId || ""}
+                                                    onChange={(event) =>
+                                                        setOrders((prev) => prev.map((o) => o._id === order._id ? { ...o, trackingId: event.target.value } : o))
+                                                    }
+                                                />
+                                                <Select
+                                                    value={order.shipmentStatus || "not_created"}
+                                                    onChange={(event) =>
+                                                        setOrders((prev) => prev.map((o) => o._id === order._id ? { ...o, shipmentStatus: event.target.value } : o))
+                                                    }
+                                                >
+                                                    <option value="not_created">Not Created</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="picked">Picked</option>
+                                                    <option value="shipped">Shipped</option>
+                                                    <option value="delivered">Delivered</option>
+                                                    <option value="cancelled">Cancelled</option>
+                                                </Select>
+                                                <button
+                                                    type="button"
+                                                    className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/15 hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
+                                                    onClick={() => updateShipmentDetails(order._id, order.shipmentStatus, order.trackingId)}
+                                                    disabled={shipmentSaveState[order._id] === "saving"}
+                                                >
+                                                    {shipmentSaveState[order._id] === "saving"
+                                                        ? "Saving"
+                                                        : shipmentSaveState[order._id] === "saved"
+                                                            ? "Saved"
+                                                            : "Save Shipment Details"}
+                                                </button>
+                                            </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>
