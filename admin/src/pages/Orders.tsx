@@ -199,7 +199,6 @@ export function OrdersPage() {
                                 <TableHeaderCell>Delivery Address</TableHeaderCell>
                                 <TableHeaderCell>Payment</TableHeaderCell>
                                 <TableHeaderCell>Shipment</TableHeaderCell>
-                                <TableHeaderCell>Status</TableHeaderCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -289,25 +288,6 @@ export function OrdersPage() {
                                                             : "Save Shipment Details"}
                                                 </button>
                                             </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <Badge variant={statusMap[order.orderStatus]}>
-                                                {order.orderStatus}
-                                            </Badge>
-                                            <Select
-                                                value={order.orderStatus}
-                                                onChange={(event) => updateStatus(order._id, event.target.value)}
-                                                className="max-w-[140px]"
-                                            >
-                                                <option value="pending">Pending</option>
-                                                <option value="paid">Paid</option>
-                                                <option value="processing">Processing</option>
-                                                <option value="shipped">Shipped</option>
-                                                <option value="delivered">Delivered</option>
-                                                <option value="cancelled">Cancelled</option>
-                                            </Select>
                                         </div>
                                     </TableCell>
                                 </TableRow>

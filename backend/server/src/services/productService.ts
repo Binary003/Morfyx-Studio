@@ -5,14 +5,22 @@ import { ApiError } from "../utils/apiError";
 import { parsePagination } from "../utils/pagination";
 
 export const createProduct = async (payload: any) => {
+  const origin = payload.origin === "imported" || payload.productType === "imported" ? "imported" : "local";
+  const productType = payload.productType || (origin === "imported" ? "imported" : "standard");
   const slug = slugify(payload.name, { lower: true, strict: true });
   const existing = await Product.findOne({ slug });
   if (existing) throw new ApiError(409, "Product already exists");
 
-  return Product.create({ ...payload, slug });
+  return Product.create({ ...payload, slug, origin, productType });
 };
 
 export const updateProduct = async (id: string, payload: any) => {
+  if (payload.origin || payload.productType) {
+    const origin = payload.origin === "imported" || payload.productType === "imported" ? "imported" : "local";
+    payload.origin = origin;
+    payload.productType = payload.productType || (origin === "imported" ? "imported" : "standard");
+  }
+
   if (payload.name) {
     payload.slug = slugify(payload.name, { lower: true, strict: true });
   }

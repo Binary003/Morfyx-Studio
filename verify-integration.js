@@ -27,8 +27,8 @@ if (fs.existsSync(frontendEnvPath)) {
         checks.push(false);
     }
 } else {
-    console.log('   ⚠️  Frontend .env not found (will use .env.example defaults)');
-    checks.push(true);
+    console.log('   ⚠️  Frontend .env not found');
+    checks.push(false);
 }
 
 // Check 2: Backend .env

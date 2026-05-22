@@ -16,7 +16,14 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
     bannerImage = await uploadToCloudinary(file.buffer, "categories");
   }
 
-  const category = await createCategory(req.body.name, bannerImage);
+  const category = await createCategory(
+    {
+      name: req.body.name,
+      description: req.body.description,
+      featured: req.body.featured === true || req.body.featured === "true",
+    },
+    bannerImage
+  );
   sendSuccess(res, { category }, "Category created");
 });
 

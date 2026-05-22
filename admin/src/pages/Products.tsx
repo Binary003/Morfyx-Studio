@@ -71,10 +71,11 @@ export function ProductsPage() {
     useEffect(() => {
         fetchData(page, selectedCategory);
 
-        // Set up periodic refetch every 30 seconds to catch stock changes
+        // Set up periodic refetch, but keep it conservative in production.
+        const refreshInterval = import.meta.env.PROD ? 300000 : 30000;
         const interval = setInterval(() => {
             fetchData(pageRef.current, categoryRef.current);
-        }, 30000);
+        }, refreshInterval);
 
         return () => clearInterval(interval);
     }, [page, selectedCategory]);

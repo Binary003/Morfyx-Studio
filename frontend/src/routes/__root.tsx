@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { CustomFigureModalProvider } from "@/components/site/CustomFigureModal";
+import { FloatingWhatsAppButton } from "@/components/site/FloatingWhatsAppButton";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
 
@@ -123,6 +124,7 @@ function RootComponent() {
         <CartProvider>
           <CustomFigureModalProvider>
             <Outlet />
+            <FloatingWhatsAppButton />
           </CustomFigureModalProvider>
         </CartProvider>
       </AuthProvider>

@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import { Mail, MapPin, MessageCircle } from "lucide-react";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -15,6 +16,8 @@ export const Route = createFileRoute("/contact")({
 });
 
 function ContactPage() {
+  const whatsappUrl = buildWhatsAppUrl("Hi Morfyx Studio, I have a question about an order / product.");
+
   return (
     <PageShell>
       <PageHero eyebrow="Contact" title="Talk to our studio team" desc="We reply within 24 hours. For custom commissions, message us on WhatsApp." />
@@ -35,10 +38,16 @@ function ContactPage() {
           <div className="flex flex-col gap-4">
             {[
               { icon: Mail, t: "Email", d: "hello@morfyxstudio.in" },
-              { icon: MessageCircle, t: "WhatsApp", d: "+91 99999 99999" },
+              { icon: MessageCircle, t: "WhatsApp", d: "+91 99999 99999", href: whatsappUrl },
               { icon: MapPin, t: "Studio", d: "India · Single studio" },
             ].map((c) => (
-              <div key={c.t} className="glass rounded-2xl p-6 flex gap-4 items-start hover:glow-pink transition">
+              <a
+                key={c.t}
+                href={c.href}
+                target={c.href ? "_blank" : undefined}
+                rel={c.href ? "noreferrer" : undefined}
+                className="glass rounded-2xl p-6 flex gap-4 items-start hover:glow-pink transition"
+              >
                 <div className="h-12 w-12 shrink-0 rounded-xl bg-[var(--gradient-neon)] grid place-items-center text-primary-foreground glow-pink">
                   <c.icon className="h-5 w-5" />
                 </div>
@@ -46,7 +55,7 @@ function ContactPage() {
                   <div className="text-xs uppercase tracking-[0.25em] text-accent">{c.t}</div>
                   <div className="font-display text-lg font-bold mt-1">{c.d}</div>
                 </div>
-              </div>
+              </a>
             ))}
           </div>
         </div>

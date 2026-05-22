@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
 import { ArrowUpRight } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useCustomFigureModal } from "./CustomFigureModal";
+import { useAllProducts } from "@/lib/products";
+import { api } from "@/lib/api";
 import naruto from "@/assets/col-naruto.jpg";
 import onepiece from "@/assets/col-onepiece.jpg";
 import dragonball from "@/assets/col-dragonball.jpg";
@@ -8,14 +11,80 @@ import demon from "@/assets/col-demon.jpg";
 import aot from "@/assets/col-aot.jpg";
 import jjk from "@/assets/col-jjk.jpg";
 
-const collections = [
-  { name: "Naruto", count: 64, img: naruto, accent: "from-orange-500/40 to-transparent" },
-  { name: "One Piece", count: 52, img: onepiece, accent: "from-red-500/40 to-transparent" },
-  { name: "Dragon Ball", count: 78, img: dragonball, accent: "from-yellow-400/40 to-transparent" },
-  { name: "Demon Slayer", count: 41, img: demon, accent: "from-pink-500/40 to-transparent" },
-  { name: "Attack on Titan", count: 33, img: aot, accent: "from-emerald-500/40 to-transparent" },
-  { name: "Jujutsu Kaisen", count: 29, img: jjk, accent: "from-purple-500/40 to-transparent" },
+type HomepageCollection = {
+  name: string;
+  slug: string;
+  description: string;
+  featured: boolean;
+  bannerImage?: {
+    url: string;
+    publicId: string;
+  };
+};
+
+type HomepageProduct = {
+  category?: string;
+};
+
+const fallbackCollections = [
+  { name: "Naruto", img: naruto, accent: "from-orange-500/40 to-transparent" },
+  { name: "One Piece", img: onepiece, accent: "from-red-500/40 to-transparent" },
+  { name: "Dragon Ball", img: dragonball, accent: "from-yellow-400/40 to-transparent" },
+  { name: "Demon Slayer", img: demon, accent: "from-pink-500/40 to-transparent" },
+  { name: "Attack on Titan", img: aot, accent: "from-emerald-500/40 to-transparent" },
+  { name: "Jujutsu Kaisen", img: jjk, accent: "from-purple-500/40 to-transparent" },
 ];
+
+function normalizeCategory(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, "and")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function getAccent(name: string) {
+  const normalized = normalizeCategory(name);
+
+  if (normalized.includes("naruto")) return "from-orange-500/40 to-transparent";
+  if (normalized.includes("one-piece")) return "from-red-500/40 to-transparent";
+  if (normalized.includes("dragon-ball")) return "from-yellow-400/40 to-transparent";
+  if (normalized.includes("demon-slayer")) return "from-pink-500/40 to-transparent";
+  if (normalized.includes("attack-on-titan")) return "from-emerald-500/40 to-transparent";
+  if (normalized.includes("jujutsu-kaisen")) return "from-purple-500/40 to-transparent";
+
+  return "from-cyan-500/40 to-transparent";
+}
+
+function getFallbackImage(name: string) {
+  const normalized = normalizeCategory(name);
+
+  if (normalized.includes("naruto")) return naruto;
+  if (normalized.includes("one-piece")) return onepiece;
+  if (normalized.includes("dragon-ball")) return dragonball;
+  if (normalized.includes("demon-slayer")) return demon;
+  if (normalized.includes("attack-on-titan")) return aot;
+  if (normalized.includes("jujutsu-kaisen")) return jjk;
+
+  return naruto;
+}
+
+function parseCategories(response: any): HomepageCollection[] {
+  if (Array.isArray(response?.data?.categories)) {
+    return response.data.categories;
+  }
+
+  if (Array.isArray(response?.data?.items)) {
+    return response.data.items;
+  }
+
+  if (Array.isArray(response?.data)) {
+    return response.data;
+  }
+
+  return [];
+}
 
 export function Collections({
   onSelectCategory,
@@ -23,6 +92,73 @@ export function Collections({
   onSelectCategory?: (category: string) => void;
 }) {
   const { open } = useCustomFigureModal();
+  const { data: products } = useAllProducts();
+  const [categories, setCategories] = useState<HomepageCollection[]>([]);
+
+  useEffect(() => {
+    let active = true;
+
+    const fetchCategories = async () => {
+      try {
+        const response = await api.getCategories();
+        if (active) {
+          setCategories(parseCategories(response));
+        }
+      } catch (error) {
+        console.error("Failed to load homepage collections:", error);
+        if (active) {
+          setCategories([]);
+        }
+      }
+    };
+
+    fetchCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const productCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+
+    for (const product of products as HomepageProduct[]) {
+      const key = normalizeCategory(product.category || "");
+      if (!key) {
+        continue;
+      }
+
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+
+    return counts;
+  }, [products]);
+
+  const collections = useMemo(() => {
+    const featured = categories.filter((category) => category.featured);
+    const source = featured.length > 0 ? featured : categories;
+
+    if (source.length === 0) {
+      return fallbackCollections.map((collection) => ({
+        ...collection,
+        count: productCounts.get(normalizeCategory(collection.name)) || 0,
+      }));
+    }
+
+    return source.map((category) => {
+      const name = category.name;
+      const normalized = normalizeCategory(name);
+
+      return {
+        name,
+        count: productCounts.get(normalized) || 0,
+        img: category.bannerImage?.url || getFallbackImage(name),
+        accent: getAccent(name),
+        description: category.description,
+      };
+    });
+  }, [categories, productCounts]);
+
   return (
     <section id="collections" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -71,7 +207,7 @@ export function Collections({
                 </div>
                 <div>
                   <h3 className="font-display text-3xl font-bold">{c.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">Explore collection →</p>
+                  <p className="text-sm text-muted-foreground mt-1">{c.description || "Explore collection →"}</p>
                 </div>
               </div>
             </motion.button>

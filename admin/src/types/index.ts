@@ -33,6 +33,10 @@ export interface Category {
     slug: string;
     description: string;
     featured: boolean;
+    bannerImage?: {
+        url: string;
+        publicId: string;
+    };
 }
 
 export interface Customer {

@@ -127,7 +127,7 @@ class AdminApiClient {
             response.data.items = response.data.items.map((p: any) => ({
                 id: p._id || p.id,
                 name: p.name,
-                category: p.animeCategory?.name || p.category || "General",
+                category: p.animeCategory?.name || p.animeCategory?.slug || p.category?.name || p.category || "General",
                 price: p.price,
                 discountPrice: p.discountPrice,
                 stock: p.stock || 0,
@@ -136,9 +136,9 @@ class AdminApiClient {
                 imageUrl: p.images?.[0]?.url || p.images?.[0],
                 description: p.description,
                 offerText: p.offerStrip,
-                type: p.origin === "imported" ? "imported" : "standard",
+                type: p.origin === "imported" || p.productType === "imported" ? "imported" : "standard",
                 featured: p.featured || false,
-                imported: p.origin === "imported",
+                imported: p.origin === "imported" || p.productType === "imported",
                 status: p.status || "active"
             }));
         }
@@ -155,7 +155,7 @@ class AdminApiClient {
             response.data.product = {
                 id: p._id || p.id,
                 name: p.name,
-                category: p.animeCategory?.name || p.category || "General",
+                category: p.animeCategory?.name || p.animeCategory?.slug || p.category?.name || p.category || "General",
                 categoryId: p.animeCategory?._id || p.animeCategory || "",  // Category ID for form
                 price: p.price,
                 discountPrice: p.discountPrice,
@@ -166,9 +166,9 @@ class AdminApiClient {
                 images: p.images?.map((img: any) => ({ url: img.url || img })) || [],  // All images
                 description: p.description,
                 offerText: p.offerStrip,
-                type: p.origin === "imported" ? "imported" : "standard",
+                type: p.origin === "imported" || p.productType === "imported" ? "imported" : "standard",
                 featured: p.featured || false,
-                imported: p.origin === "imported",
+                imported: p.origin === "imported" || p.productType === "imported",
                 status: p.status || "active"
             };
         }
@@ -201,17 +201,17 @@ class AdminApiClient {
         return this.request<any>("/categories");
     }
 
-    async createCategory(data: { name: string }) {
+    async createCategory(data: { name: string; slug?: string; description?: string; featured?: boolean } | FormData) {
         return this.request("/categories", {
             method: "POST",
-            body: JSON.stringify(data),
+            body: data instanceof FormData ? data : JSON.stringify(data),
         });
     }
 
-    async updateCategory(id: string, data: { name: string }) {
+    async updateCategory(id: string, data: { name: string; slug?: string; description?: string; featured?: boolean } | FormData) {
         return this.request(`/categories/${id}`, {
             method: "PUT",
-            body: JSON.stringify(data),
+            body: data instanceof FormData ? data : JSON.stringify(data),
         });
     }
 

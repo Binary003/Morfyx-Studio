@@ -4,7 +4,6 @@ import { env } from "./env";
 export const connectDb = async () => {
   try {
     console.log("🔌 Attempting to connect to MongoDB...");
-    console.log("📍 URI:", env.mongodbUri.substring(0, 50) + "...");
 
     const connection = await mongoose.connect(env.mongodbUri, {
       autoIndex: true,
@@ -26,7 +25,7 @@ export const connectDb = async () => {
     console.error("2. Verify MONGODB_URI in .env");
     console.error("3. Check network connection");
     console.error("4. For Atlas: Check IP whitelist\n");
-    
+
     // Don't swallow the error - let it propagate
     throw error;
   }

@@ -2,12 +2,18 @@ import slugify from "slugify";
 import { Category } from "../models/Category";
 import { ApiError } from "../utils/apiError";
 
-export const createCategory = async (name: string, bannerImage?: any) => {
-  const slug = slugify(name, { lower: true, strict: true });
+export const createCategory = async (payload: { name: string; description?: string; featured?: boolean }, bannerImage?: any) => {
+  const slug = slugify(payload.name, { lower: true, strict: true });
   const exists = await Category.findOne({ slug });
   if (exists) throw new ApiError(409, "Category already exists");
 
-  return Category.create({ name, slug, bannerImage });
+  return Category.create({
+    name: payload.name,
+    slug,
+    description: payload.description || "",
+    featured: payload.featured || false,
+    bannerImage,
+  });
 };
 
 export const updateCategory = async (id: string, payload: any) => {

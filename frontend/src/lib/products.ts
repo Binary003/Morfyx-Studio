@@ -32,6 +32,79 @@ export type ApiProduct = {
     description: string;
 };
 
+const PRODUCT_LIST_CACHE_TTL_MS = import.meta.env.PROD ? 300000 : 10000;
+
+type ProductApiCacheEntry = {
+    items?: any[];
+    fetchedAt: number;
+    promise?: Promise<any[]>;
+};
+
+const productListCache = new Map<number, ProductApiCacheEntry>();
+
+async function fetchProductsFromApi(limit: number) {
+    const cacheEntry = productListCache.get(limit);
+    const isFresh = cacheEntry && cacheEntry.items && Date.now() - cacheEntry.fetchedAt < PRODUCT_LIST_CACHE_TTL_MS;
+
+    if (isFresh) {
+        return cacheEntry.items as any[];
+    }
+
+    if (cacheEntry?.promise) {
+        return cacheEntry.promise;
+    }
+
+    const request = api.getProducts({ limit }).then((response) => {
+        const items = response.data?.items;
+
+        if (!Array.isArray(items)) {
+            throw new Error("Invalid API response format");
+        }
+
+        productListCache.set(limit, {
+            items,
+            fetchedAt: Date.now(),
+        });
+
+        return items;
+    });
+
+    productListCache.set(limit, {
+        fetchedAt: Date.now(),
+        promise: request,
+    });
+
+    return request;
+}
+
+function clearStaleProductCache(limit: number) {
+    const cached = productListCache.get(limit);
+    if (cached?.items && Date.now() - cached.fetchedAt >= PRODUCT_LIST_CACHE_TTL_MS) {
+        productListCache.delete(limit);
+    }
+}
+
+function mapApiProduct(p: any, type: ProductType): Product {
+    const normalizedType = p.origin === "imported" || p.productType === "imported" ? "imported" : type;
+    return {
+        id: p._id || p.id,
+        name: p.name,
+        price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
+        oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
+        rating: p.rating || 4.5,
+        badge: p.badge || (p.featured ? "Featured" : undefined),
+        img: p.images?.[0]?.url || p.images?.[0] || p1,
+        category: p.animeCategory?.name || p.animeCategory?.slug || p.category?.name || p.category || "General",
+        description: p.description,
+        type: normalizedType,
+        stock: p.stock ?? 0,
+    };
+}
+
+function mapImportedApiProduct(p: any): Product {
+    return mapApiProduct(p, "imported");
+}
+
 const standardProducts: Product[] = [
     {
         id: "naruto-1",
@@ -235,37 +308,18 @@ export function useProducts(type: ProductType = "standard") {
         const fetchProducts = async () => {
             try {
                 setStatus("loading");
-                const response = await api.getProducts({ limit: 100 });
+                clearStaleProductCache(200);
+                const items = await fetchProductsFromApi(200);
+                const filterOrigin = type === "imported" ? "imported" : "local";
+                const mappedProducts = items
+                    .filter((p: any) => {
+                        const origin = p.origin || (p.productType === "imported" ? "imported" : "local");
+                        return origin === filterOrigin;
+                    })
+                    .map((p: any) => mapApiProduct(p, type));
 
-                // Backend returns: { items, total, page, limit, success: true }
-                if (response.data?.items && Array.isArray(response.data.items)) {
-                    // Map API response to local Product format
-                    const filterOrigin = type === "imported" ? "imported" : "local";
-                    const mappedProducts = response.data.items
-                        .filter((p: any) => {
-                            // Treat undefined origin as "local"
-                            const productOrigin = p.origin || "local";
-                            return productOrigin === filterOrigin;
-                        })
-                        .map((p: any) => ({
-                            id: p._id || p.id,
-                            name: p.name,
-                            price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
-                            oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
-                            rating: p.rating || 4.5,
-                            badge: p.badge || (p.featured ? "Featured" : undefined),
-                            img: p.images?.[0]?.url || p.images?.[0] || p1,
-                            category: p.animeCategory?.name || p.category || "General",
-                            description: p.description,
-                            type: type,
-                            stock: p.stock ?? 0,
-                        }));
-
-                    setData(mappedProducts);
-                    setStatus("success");
-                } else {
-                    throw new Error("Invalid API response format");
-                }
+                setData(mappedProducts);
+                setStatus("success");
             } catch (err) {
                 console.error("Failed to fetch products from API:", err);
                 // Use mock data as fallback only in development
@@ -283,8 +337,8 @@ export function useProducts(type: ProductType = "standard") {
         // Fetch immediately
         fetchProducts();
 
-        // Refetch every 10 seconds for real-time updates from admin
-        const interval = setInterval(fetchProducts, 10000);
+        // Keep the UI fresh, but avoid hammering the server in production.
+        const interval = setInterval(fetchProducts, PRODUCT_LIST_CACHE_TTL_MS);
 
         return () => clearInterval(interval);
     }, [type]);
@@ -301,29 +355,13 @@ export function useImportedProducts() {
         const fetchProducts = async () => {
             try {
                 setStatus("loading");
-                const response = await api.getProducts({ limit: 100 });
-
-                if (response.data?.items && Array.isArray(response.data.items)) {
-                    const mappedProducts = response.data.items
-                        .filter((p: any) => p.origin === "imported")
-                        .map((p: any) => ({
-                            id: p._id || p.id,
-                            name: p.name,
-                            price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
-                            oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
-                            rating: p.rating || 4.5,
-                            badge: p.badge || (p.featured ? "Featured" : undefined),
-                            img: p.images?.[0]?.url || p.images?.[0] || p1,
-                            category: p.animeCategory?.name || p.category || "Imported",
-                            description: p.description,
-                            type: "imported" as ProductType,
-                            stock: p.stock ?? 0,
-                        }));
-                    setData(mappedProducts);
-                    setStatus("success");
-                } else {
-                    throw new Error("Invalid API response format");
-                }
+                clearStaleProductCache(200);
+                const items = await fetchProductsFromApi(200);
+                const mappedProducts = items
+                    .filter((p: any) => p.origin === "imported" || p.productType === "imported")
+                    .map((p: any) => mapImportedApiProduct(p));
+                setData(mappedProducts);
+                setStatus("success");
             } catch (err) {
                 console.error("Failed to fetch imported products:", err);
                 if (import.meta.env.DEV) {
@@ -339,8 +377,8 @@ export function useImportedProducts() {
 
         fetchProducts();
 
-        // Refetch every 10 seconds for real-time updates
-        const interval = setInterval(fetchProducts, 10000);
+        // Keep the UI fresh, but avoid hammering the server in production.
+        const interval = setInterval(fetchProducts, PRODUCT_LIST_CACHE_TTL_MS);
         return () => clearInterval(interval);
     }, []);
 
@@ -356,27 +394,11 @@ export function useAllProducts() {
         const fetchProducts = async () => {
             try {
                 setStatus("loading");
-                const response = await api.getProducts({ limit: 200 });
-
-                if (response.data?.items && Array.isArray(response.data.items)) {
-                    const mappedProducts = response.data.items.map((p: any) => ({
-                        id: p._id || p.id,
-                        name: p.name,
-                        price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
-                        oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
-                        rating: p.rating || 4.5,
-                        badge: p.badge || (p.featured ? "Featured" : undefined),
-                        img: p.images?.[0]?.url || p.images?.[0] || p1,
-                        category: p.animeCategory?.name || p.category || "General",
-                        description: p.description,
-                        type: (p.origin === "imported" ? "imported" : "standard") as ProductType,
-                        stock: p.stock ?? 0,
-                    }));
-                    setData(mappedProducts);
-                    setStatus("success");
-                } else {
-                    throw new Error("Invalid API response format");
-                }
+                clearStaleProductCache(200);
+                const items = await fetchProductsFromApi(200);
+                const mappedProducts = items.map((p: any) => mapApiProduct(p, (p.origin === "imported" || p.productType === "imported" ? "imported" : "standard") as ProductType));
+                setData(mappedProducts);
+                setStatus("success");
             } catch (err) {
                 console.error("Failed to fetch all products:", err);
                 if (import.meta.env.DEV) {
@@ -392,8 +414,8 @@ export function useAllProducts() {
 
         fetchProducts();
 
-        // Refetch every 10 seconds for real-time updates
-        const interval = setInterval(fetchProducts, 10000);
+        // Keep the UI fresh, but avoid hammering the server in production.
+        const interval = setInterval(fetchProducts, PRODUCT_LIST_CACHE_TTL_MS);
         return () => clearInterval(interval);
     }, []);
 

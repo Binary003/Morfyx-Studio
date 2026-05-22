@@ -26,7 +26,7 @@ const navItems = [
     { label: "Categories", to: "/categories", icon: Grid3X3 },
     { label: "Orders", to: "/orders", icon: ShoppingBag },
     { label: "Customers", to: "/customers", icon: Users },
-    { label: "Inventory", to: "/inventory", icon: LayoutGrid },
+    { label: "Collections", to: "/collections", icon: LayoutGrid },
     { label: "Offers & Banners", to: "/offers", icon: Megaphone },
     { label: "Analytics", to: "/analytics", icon: BarChart3 },
     { label: "Reviews", to: "/reviews", icon: Star },

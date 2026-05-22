@@ -1,8 +1,7 @@
 import { useState, createContext, useContext, ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, Send, Sparkles } from "lucide-react";
-
-const WHATSAPP_NUMBER = "919999999999"; // replace with admin number (no +)
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type Ctx = { open: () => void; close: () => void };
 const ModalCtx = createContext<Ctx>({ open: () => { }, close: () => { } });
@@ -25,8 +24,8 @@ function Modal({ onClose }: { onClose: () => void }) {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    const msg = `*Custom Figure Enquiry — OtakuForge 3D*%0A%0A*Name:* ${form.name}%0A*Anime Character:* ${form.character}%0A*Budget:* ${form.budget}%0A*Description:* ${form.description}${fileName ? `%0A*Reference Image:* ${fileName} (will share next)` : ""}`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${msg}`, "_blank");
+    const msg = `*Custom Figure Enquiry — Morfyx Studio*\n\n*Name:* ${form.name}\n*Anime Character:* ${form.character}\n*Budget:* ${form.budget}\n*Description:* ${form.description}${fileName ? `\n*Reference Image:* ${fileName} (will share next)` : ""}`;
+    window.open(buildWhatsAppUrl(msg), "_blank", "noopener,noreferrer");
     onClose();
   };
 

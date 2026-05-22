@@ -76,14 +76,35 @@ export function CategoriesPage() {
         try {
             if (editingId) {
                 // Update category
-                await adminApi.updateCategory(editingId, payload);
-                setItems((prev) => prev.map((item) => (item.id === editingId ? { ...item, ...payload } : item)));
+                const response = await adminApi.updateCategory(editingId, payload);
+                const updatedCategory = (response as any)?.data?.category;
+                if (updatedCategory?._id) {
+                    setItems((prev) =>
+                        prev.map((item) =>
+                            item.id === editingId
+                                ? {
+                                    id: updatedCategory._id,
+                                    name: updatedCategory.name,
+                                    slug: updatedCategory.slug,
+                                    description: updatedCategory.description || "",
+                                    featured: updatedCategory.featured || false,
+                                }
+                                : item
+                        )
+                    );
+                } else {
+                    setItems((prev) => prev.map((item) => (item.id === editingId ? { ...item, ...payload } : item)));
+                }
             } else {
                 // Create category
                 const response = await adminApi.createCategory(payload);
+                const createdCategory = (response as any)?.data?.category;
                 const newCategory: Category = {
-                    id: response.data?.data?._id || `c-${Date.now()}`,
-                    ...payload,
+                    id: createdCategory?._id || `c-${Date.now()}`,
+                    name: createdCategory?.name || payload.name,
+                    slug: createdCategory?.slug || payload.slug,
+                    description: createdCategory?.description || payload.description,
+                    featured: createdCategory?.featured ?? payload.featured,
                 };
                 setItems((prev) => [newCategory, ...prev]);
             }

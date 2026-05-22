@@ -143,6 +143,7 @@ export function ProductFormPage() {
             formData.append("discountPrice", String(form.discountPrice || 0));
             formData.append("stock", String(form.stock));
             formData.append("description", form.description);
+            formData.append("productType", form.type);
             formData.append("origin", form.origin);
             formData.append("featured", String(form.featured));
             formData.append("badge", form.badge);

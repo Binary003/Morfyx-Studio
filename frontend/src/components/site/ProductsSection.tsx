@@ -2,8 +2,17 @@ import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Box, ShoppingBag, Star, X } from "lucide-react";
 import { SectionHead } from "./Collections";
-import { formatPrice, type Product, type ProductType, useProducts } from "@/lib/products";
+import { formatPrice, type Product, type ProductType, useAllProducts, useProducts } from "@/lib/products";
 import { useCart } from "@/lib/cart";
+
+function normalizeCategory(value: string) {
+    return value
+        .toLowerCase()
+        .trim()
+        .replace(/&/g, "and")
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+}
 
 type ProductsSectionProps = {
     eyebrow: string;
@@ -24,23 +33,33 @@ export function ProductsSection({
     onClearCategory,
     productType = "standard",
 }: ProductsSectionProps) {
-    const { data } = useProducts(productType);
+    const { data: catalogProducts } = useAllProducts();
+    const { data: typedProducts } = useProducts(productType);
     const { addItem } = useCart();
     const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+    const normalizedActiveCategory = activeCategory ? normalizeCategory(activeCategory) : null;
+    const sourceProducts = normalizedActiveCategory ? catalogProducts : typedProducts;
 
     const filtered = useMemo(() => {
-        if (!activeCategory) {
-            return data;
+        if (!normalizedActiveCategory) {
+            return sourceProducts;
         }
-        return data.filter((product) => product.category === activeCategory);
-    }, [data, activeCategory]);
+        return sourceProducts.filter((product) => {
+            const productCategory = normalizeCategory(product.category);
+            return (
+                productCategory === normalizedActiveCategory ||
+                productCategory.includes(normalizedActiveCategory) ||
+                normalizedActiveCategory.includes(productCategory)
+            );
+        });
+    }, [sourceProducts, normalizedActiveCategory]);
 
     const visible = useMemo(() => {
-        if (!limit) {
+        if (activeCategory || !limit) {
             return filtered;
         }
         return filtered.slice(0, limit);
-    }, [filtered, limit]);
+    }, [filtered, limit, activeCategory]);
 
     return (
         <section id="products" className="relative py-24 sm:py-32">
