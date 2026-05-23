@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { LogOut, Search, ShoppingBag, Heart, User, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "@tanstack/react-router";
 import { useCustomFigureModal } from "./CustomFigureModal";
 import { CartDrawer } from "./CartDrawer";
 import { useCart } from "@/lib/cart";
@@ -24,11 +25,39 @@ const links = [
   { label: "Contact", to: "/contact" as const },
 ];
 
+function isActivePath(pathname: string, target: string) {
+  if (target === "/") {
+    return pathname === "/";
+  }
+
+  return pathname === target || pathname.startsWith(`${target}/`);
+}
+
+function getCurrentPageLabel(pathname: string) {
+  const matchedLink = links.find((link) => isActivePath(pathname, link.to));
+  if (matchedLink) {
+    return matchedLink.label;
+  }
+
+  if (pathname.startsWith("/orders")) return "My Orders";
+  if (pathname.startsWith("/profile")) return "My Profile";
+  if (pathname.startsWith("/login")) return "Log In";
+  if (pathname.startsWith("/signup")) return "Sign Up";
+  if (pathname.startsWith("/shop")) return "Shop";
+  if (pathname.startsWith("/imported")) return "Imported Collection";
+  if (pathname.startsWith("/custom")) return "Custom Figures";
+  if (pathname.startsWith("/about")) return "About";
+  if (pathname.startsWith("/contact")) return "Contact";
+
+  return "Home";
+}
+
 export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const { pathname } = useLocation();
   const { itemCount } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
   const { data: allProducts } = useAllProducts();
@@ -84,20 +113,22 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
           className={`flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-all ${scrolled ? "glass glow-cyan" : ""
             }`}
         >
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="relative h-9 w-9 rounded-xl bg-[var(--gradient-neon)] grid place-items-center font-bold text-primary-foreground glow-pink">
-              <span className="font-display">M</span>
-              <div className="absolute inset-0 rounded-xl bg-[var(--gradient-neon)] blur-lg opacity-50 group-hover:opacity-100 transition" />
-            </div>
-            <div className="leading-none">
-              <div className="font-display text-lg font-bold tracking-tight">
-                Morfyx <span className="text-gradient-neon">Studio</span>
+          <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
+            <Link to="/" className="flex items-center gap-2 group">
+              <div className="relative h-9 w-9 rounded-xl bg-[var(--gradient-neon)] grid place-items-center font-bold text-primary-foreground glow-pink">
+                <span className="font-display">M</span>
+                <div className="absolute inset-0 rounded-xl bg-[var(--gradient-neon)] blur-lg opacity-50 group-hover:opacity-100 transition" />
               </div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">India Studio</div>
-            </div>
-          </Link>
+              <div className="leading-none">
+                <div className="font-display text-lg font-bold tracking-tight">
+                  Morfyx <span className="text-gradient-neon">Studio</span>
+                </div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">India Studio</div>
+              </div>
+            </Link>
+          </div>
 
-          <NavLinks />
+          <NavLinks pathname={pathname} />
 
 
           <div className="flex items-center gap-1 sm:gap-2 relative">
@@ -194,7 +225,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
               <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground px-2 pb-2">
                 Results
               </div>
-              <div className="flex flex-col gap-2">
+              <div className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
                 {results.map((product) => (
                   <Link
                     key={product.id}
@@ -229,6 +260,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
                 onNavigate={() => setOpen(false)}
                 isAuthenticated={isAuthenticated}
                 onLogout={logout}
+                pathname={pathname}
               />
             </motion.div>
           )}
@@ -267,7 +299,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
                 </button>
               </div>
 
-              <div className="mt-4 flex flex-col gap-2">
+              <div className="mt-4 flex max-h-[60vh] flex-col gap-2 overflow-y-auto pr-1">
                 {query && results.length === 0 && (
                   <div className="text-xs text-muted-foreground">No matches found.</div>
                 )}
@@ -320,29 +352,36 @@ function IconBtn({
   );
 }
 
-function NavLinks() {
+function NavLinks({ pathname }: { pathname: string }) {
   const { open } = useCustomFigureModal();
   return (
-    <nav className="hidden lg:flex items-center gap-7">
+    <nav className="hidden lg:flex items-center gap-2">
       {links.map((l) =>
         l.action === "custom" ? (
           <button
             key={l.label}
             onClick={open}
-            className="relative text-sm font-medium text-foreground/80 hover:text-foreground transition group"
+            className="relative group rounded-full px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition"
           >
             {l.label}
-            <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--gradient-neon)] transition-all duration-300 group-hover:w-full" />
+            <span className="absolute -bottom-0.5 left-3 right-3 h-px scale-x-0 bg-[var(--gradient-neon)] transition-transform duration-300 group-hover:scale-x-100" />
           </button>
         ) : (
           <Link
             key={l.label}
             to={l.to}
-            className="relative text-sm font-medium text-foreground/80 hover:text-foreground transition group"
+            className="relative group rounded-full px-3 py-2 text-sm font-medium text-foreground/80 hover:text-foreground transition"
             activeProps={{ className: "text-foreground" }}
           >
+            {isActivePath(pathname, l.to) && (
+              <motion.span
+                layoutId="nav-active-pill"
+                className="absolute inset-0 rounded-full border border-white/10 bg-white/5 shadow-sm"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
             {l.label}
-            <span className="absolute -bottom-1 left-0 h-px w-0 bg-[var(--gradient-neon)] transition-all duration-300 group-hover:w-full" />
+            <span className="absolute -bottom-0.5 left-3 right-3 h-px scale-x-0 bg-[var(--gradient-neon)] transition-transform duration-300 group-hover:scale-x-100" />
           </Link>
         )
       )}
@@ -354,10 +393,12 @@ function MobileLinks({
   onNavigate,
   isAuthenticated,
   onLogout,
+  pathname,
 }: {
   onNavigate: () => void;
   isAuthenticated: boolean;
   onLogout: () => void;
+  pathname: string;
 }) {
   const { open } = useCustomFigureModal();
   return (
@@ -367,18 +408,22 @@ function MobileLinks({
           <button
             key={l.label}
             onClick={() => { open(); onNavigate(); }}
-            className="text-left px-3 py-2 rounded-lg hover:bg-secondary/60"
+            className={`text-left px-3 py-2 rounded-lg transition ${pathname.startsWith("/custom") ? "bg-secondary/80 text-foreground shadow-sm" : "hover:bg-secondary/60"}`}
           >
-            {l.label}
+            <span className="flex items-center justify-between">
+              <span>{l.label}</span>
+              {pathname.startsWith("/custom") && <span className="h-2 w-2 rounded-full bg-[var(--gradient-neon)]" />}
+            </span>
           </button>
         ) : (
           <Link
             key={l.label}
             to={l.to}
             onClick={onNavigate}
-            className="px-3 py-2 rounded-lg hover:bg-secondary/60"
+            className={`flex items-center justify-between px-3 py-2 rounded-lg transition ${isActivePath(pathname, l.to) ? "bg-secondary/80 text-foreground shadow-sm" : "hover:bg-secondary/60"}`}
           >
-            {l.label}
+            <span>{l.label}</span>
+            {isActivePath(pathname, l.to) && <span className="h-2 w-2 rounded-full bg-[var(--gradient-neon)]" />}
           </Link>
         )
       )}

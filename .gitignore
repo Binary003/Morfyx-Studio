@@ -1,0 +1,17 @@
+# Environment and secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Dependency and build output
+**/node_modules/
+**/dist/
+**/build/
+
+# Logs
+**/*.log
+
+# OS/editor artifacts
+.DS_Store
+Thumbs.db

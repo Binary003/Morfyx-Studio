@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Box, ShoppingBag, Star, X } from "lucide-react";
+import { toast } from "sonner";
 import { SectionHead } from "./Collections";
 import { formatPrice, type Product, type ProductType, useAllProducts, useProducts } from "@/lib/products";
 import { useCart } from "@/lib/cart";
@@ -61,6 +62,13 @@ export function ProductsSection({
         return filtered.slice(0, limit);
     }, [filtered, limit, activeCategory]);
 
+    const handleAddToCart = (product: Product) => {
+        const added = addItem(product);
+        if (added) {
+            toast.success(`${product.name} added to cart.`, { duration: 1400 });
+        }
+    };
+
     return (
         <section id="products" className="relative py-24 sm:py-32">
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -90,7 +98,7 @@ export function ProductsSection({
                             product={product}
                             index={i}
                             onOpen={() => setActiveProduct(product)}
-                            onAddToCart={() => addItem(product)}
+                            onAddToCart={() => handleAddToCart(product)}
                         />
                     ))}
                 </div>
@@ -166,7 +174,7 @@ export function ProductsSection({
                                     </div>
                                     <button
                                         type="button"
-                                        onClick={() => addItem(activeProduct)}
+                                        onClick={() => handleAddToCart(activeProduct)}
                                         disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
                                         className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                     >

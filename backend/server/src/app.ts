@@ -50,6 +50,17 @@ app.use(
   })
 );
 
+const allowedOrigins = new Set(env.frontendUrls);
+app.use((req, res, next) => {
+  if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+    const origin = req.headers.origin;
+    if (origin && !allowedOrigins.has(origin)) {
+      return res.status(403).json({ success: false, message: "Invalid request origin" });
+    }
+  }
+  next();
+});
+
 app.get("/health", (_req, res) => {
   res.json({ success: true, message: "API healthy" });
 });

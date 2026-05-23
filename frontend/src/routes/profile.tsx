@@ -3,6 +3,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import { useAuth, User } from "@/lib/auth";
 import { api } from "@/lib/api";
+import { toast } from "sonner";
+
+function normalizePhone(phone: string) {
+    return phone.trim().replace(/[()\s-]/g, "");
+}
+
+function isValidPhone(phone: string) {
+    return /^[0-9]{10}$/.test(phone);
+}
 
 export const Route = createFileRoute("/profile")({
     head: () => ({
@@ -13,9 +22,10 @@ export const Route = createFileRoute("/profile")({
 
 function ProfilePage() {
     const navigate = useNavigate();
-    const { isAuthenticated, user, logout } = useAuth();
+    const { isAuthenticated, user, login, logout } = useAuth();
     const [userData, setUserData] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [error, setError] = useState("");
     const [editMode, setEditMode] = useState(false);
     const [editForm, setEditForm] = useState({ name: "", email: "", phone: "" });
@@ -31,6 +41,12 @@ function ProfilePage() {
                 setLoading(true);
                 const response = await api.getMe();
                 if (response?.data?.user) {
+                    if (response.data.user.role === "admin") {
+                        logout();
+                        navigate({ to: "/login" });
+                        return;
+                    }
+
                     setUserData(response.data.user);
                     setEditForm({
                         name: response.data.user.name,
@@ -51,6 +67,49 @@ function ProfilePage() {
     const handleLogout = () => {
         logout();
         navigate({ to: "/" });
+    };
+
+    const handleSave = async (event: React.FormEvent) => {
+        event.preventDefault();
+        setError("");
+
+        if (!editForm.name.trim()) {
+            setError("Name is required");
+            return;
+        }
+
+        const normalizedPhone = normalizePhone(editForm.phone);
+        if (normalizedPhone && !isValidPhone(normalizedPhone)) {
+            setError("Enter a valid 10-digit phone number");
+            return;
+        }
+
+        try {
+            setSaving(true);
+            const response = await api.updateMe({
+                name: editForm.name.trim(),
+                phone: normalizedPhone,
+            });
+
+            const updatedUser = response?.data?.user;
+            if (!updatedUser) {
+                throw new Error("Invalid response from server");
+            }
+
+            setUserData(updatedUser);
+            setEditForm({
+                name: updatedUser.name,
+                email: updatedUser.email,
+                phone: updatedUser.phone || "",
+            });
+            login(updatedUser);
+            setEditMode(false);
+            toast.success("Profile updated successfully");
+        } catch (err: any) {
+            setError(err.response?.data?.message || err.message || "Failed to update profile");
+        } finally {
+            setSaving(false);
+        }
     };
 
     if (!isAuthenticated) return null;
@@ -108,15 +167,9 @@ function ProfilePage() {
                                         <div className="text-lg font-medium mt-1">{userData.phone}</div>
                                     </div>
                                 )}
-                                {userData?.role && (
-                                    <div>
-                                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Account Type</div>
-                                        <div className="text-lg font-medium mt-1 capitalize">{userData.role}</div>
-                                    </div>
-                                )}
                             </div>
                         ) : (
-                            <form className="space-y-4">
+                            <form className="space-y-4" onSubmit={handleSave}>
                                 <div>
                                     <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Full Name</label>
                                     <input
@@ -139,17 +192,23 @@ function ProfilePage() {
                                     <label className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Phone</label>
                                     <input
                                         type="tel"
+                                        inputMode="tel"
+                                        autoComplete="tel"
+                                        placeholder="e.g. +12345678901"
                                         value={editForm.phone}
                                         onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
                                         className="w-full mt-2 px-4 py-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:border-neon-blue/50"
                                     />
+                                    <div className="mt-1 text-xs text-muted-foreground">
+                                        Enter exactly 10 digits.
+                                    </div>
                                 </div>
                                 <button
-                                    type="button"
-                                    onClick={() => setEditMode(false)}
+                                    type="submit"
+                                    disabled={saving}
                                     className="w-full mt-6 py-2 rounded-lg bg-gradient-to-r from-neon-pink to-neon-blue font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
                                 >
-                                    Save Changes
+                                    {saving ? "Saving..." : "Save Changes"}
                                 </button>
                             </form>
                         )}

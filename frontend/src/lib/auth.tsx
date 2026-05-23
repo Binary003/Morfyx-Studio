@@ -31,7 +31,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (raw) {
             try {
                 const parsedUser = JSON.parse(raw);
-                setUser(parsedUser);
+                if (parsedUser?.role === "admin") {
+                    localStorage.removeItem(STORAGE_KEY);
+                } else {
+                    setUser(parsedUser);
+                }
             } catch {
                 localStorage.removeItem(STORAGE_KEY);
             }
@@ -40,6 +44,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const login = (nextUser: User) => {
+        if (nextUser?.role === "admin") {
+            return;
+        }
+
         setUser(nextUser);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
     };

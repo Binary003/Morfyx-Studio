@@ -156,7 +156,7 @@ VITE_API_URL=http://localhost:5000/api
 
 ### Backend (`.env`)
 ```
-MONGODB_URI=mongodb://studiomorfyx_db_user:Morfyx123@ac-cdnkdfc-shard-00-00.y6xtzge.mongodb.net:27017,...
+MONGODB_URI=mongodb+srv://<db-user>:<db-password>@<cluster-host>/<db-name>
 PORT=5000
 NODE_ENV=development
 ```

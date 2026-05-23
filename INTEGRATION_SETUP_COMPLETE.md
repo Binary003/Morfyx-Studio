@@ -144,7 +144,7 @@ Admin Dashboard
 ### MongoDB Connection
 ```javascript
 // Backend connecting to MongoDB Atlas
-mongodb://studiomorfyx_db_user:Morfyx123@ac-cdnkdfc...
+mongodb+srv://<db-user>:<db-password>@<cluster-host>/<db-name>
 // Status: ✅ Connected
 ```
 

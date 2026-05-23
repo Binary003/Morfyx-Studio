@@ -138,7 +138,8 @@ export function OrdersPage() {
         } catch (err) {
             console.error("Failed to update shipment details:", err);
             setShipmentSaveState((prev) => ({ ...prev, [orderId]: "error" }));
-            alert("Failed to update shipment details.");
+            const message = err instanceof Error ? err.message : "Failed to update shipment details.";
+            alert(message);
         }
     };
 

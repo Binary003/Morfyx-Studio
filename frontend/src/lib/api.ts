@@ -20,6 +20,7 @@ class ApiClient {
 
         const response = await fetch(url, {
             ...options,
+            cache: "no-store",
             credentials: "include",
             headers: {
                 "Content-Type": "application/json",
@@ -163,6 +164,13 @@ class ApiClient {
 
     async getMe() {
         return this.request("/auth/me");
+    }
+
+    async updateMe(data: { name?: string; phone?: string }) {
+        return this.request("/auth/me", {
+            method: "PUT",
+            body: JSON.stringify(data),
+        });
     }
 
     // Payments

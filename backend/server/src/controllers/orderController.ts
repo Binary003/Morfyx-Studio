@@ -61,8 +61,10 @@ export const create = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const myOrders = asyncHandler(async (req: Request, res: Response) => {
-  const orders = await getUserOrders(req.user?.id as string);
-  sendSuccess(res, { orders });
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+  res.setHeader("Pragma", "no-cache");
+  const result = await getUserOrders(req.user?.id as string, req.query);
+  sendSuccess(res, result);
 });
 
 export const allOrders = asyncHandler(async (_req: Request, res: Response) => {
@@ -71,7 +73,12 @@ export const allOrders = asyncHandler(async (_req: Request, res: Response) => {
 });
 
 export const updateStatus = asyncHandler(async (req: Request, res: Response) => {
-  const order = await updateOrderStatus(req.params.id, req.body.status, req.body.trackingId, req.body.shipmentStatus);
+  const order = await updateOrderStatus(
+    req.params.id,
+    req.body.status,
+    req.body.trackingId,
+    req.body.shipmentStatus
+  );
   sendSuccess(res, { order }, "Order updated");
 });
 

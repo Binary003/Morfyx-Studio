@@ -56,6 +56,10 @@ function LoginPage() {
             // Backend sets JWT in httpOnly cookie automatically
             // Response format: { success, message, data: { user: {...} } }
             if (response?.data?.user) {
+                if (response.data.user.role === "admin") {
+                    throw new Error("Please use the admin portal to sign in.");
+                }
+
                 login(response.data.user);
                 navigate({ to: "/" });
             } else {

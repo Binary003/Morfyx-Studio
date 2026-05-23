@@ -168,7 +168,7 @@ export function Collections({
           desc="Curated drops from every legendary anime — limited runs, collector-grade detail."
         />
 
-        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-5">
           {collections.map((c, i) => (
             <motion.button
               key={c.name}
@@ -184,7 +184,7 @@ export function Collections({
               viewport={{ once: true, margin: "-100px" }}
               transition={{ duration: 0.5, delay: i * 0.07 }}
               whileHover={{ y: -6 }}
-              className="group relative aspect-[4/5] rounded-3xl overflow-hidden glass neon-border text-left"
+              className="group relative aspect-[3/4] rounded-2xl overflow-hidden glass neon-border text-left"
               aria-label={`Explore ${c.name} collection`}
             >
               <img
@@ -196,18 +196,18 @@ export function Collections({
               <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
               <div className={`absolute inset-0 bg-gradient-to-t ${c.accent} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
 
-              <div className="absolute inset-0 p-6 flex flex-col justify-between">
+              <div className="absolute inset-0 p-4 sm:p-5 flex flex-col justify-between">
                 <div className="flex justify-between items-start">
-                  <span className="glass rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.2em]">
+                  <span className="glass rounded-full px-2.5 py-1 text-[9px] uppercase tracking-[0.18em]">
                     {c.count} items
                   </span>
-                  <span className="h-9 w-9 rounded-full glass grid place-items-center group-hover:glow-pink transition">
-                    <ArrowUpRight className="h-4 w-4" />
+                  <span className="h-8 w-8 rounded-full glass grid place-items-center group-hover:glow-pink transition">
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
                 </div>
                 <div>
-                  <h3 className="font-display text-3xl font-bold">{c.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{c.description || "Explore collection →"}</p>
+                  <h3 className="font-display text-2xl font-bold leading-tight">{c.name}</h3>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{c.description || "Explore collection →"}</p>
                 </div>
               </div>
             </motion.button>
@@ -222,19 +222,19 @@ export function Collections({
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.4 }}
             whileHover={{ y: -6 }}
-            className="group relative aspect-[4/5] rounded-3xl overflow-hidden sm:col-span-2 lg:col-span-3 lg:aspect-[3/1] text-left"
+            className="group relative aspect-[4/5] rounded-2xl overflow-hidden sm:col-span-2 lg:col-span-4 lg:aspect-[5/2] text-left"
             style={{ background: "var(--gradient-neon)" }}
           >
-            <div className="absolute inset-0.5 rounded-3xl bg-background/90 grid place-items-center text-center p-10">
+            <div className="absolute inset-0.5 rounded-2xl bg-background/90 grid place-items-center text-center p-6 sm:p-8">
               <div>
-                <div className="text-xs uppercase tracking-[0.3em] text-accent">Bespoke Commission</div>
-                <h3 className="font-display text-4xl sm:text-5xl font-bold mt-3">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-accent">Bespoke Commission</div>
+                <h3 className="font-display text-3xl sm:text-4xl font-bold mt-3">
                   Custom <span className="text-gradient-neon">Anime Figures</span>
                 </h3>
-                <p className="text-muted-foreground mt-3 max-w-md mx-auto">
+                <p className="text-sm text-muted-foreground mt-3 max-w-md mx-auto">
                   Any character, any pose. We sculpt, print, and hand-paint your dream figure.
                 </p>
-                <span className="inline-flex items-center gap-2 mt-6 rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink group-hover:scale-105 transition">
+                <span className="inline-flex items-center gap-2 mt-5 rounded-full bg-[var(--gradient-neon)] px-5 py-2.5 text-sm font-semibold text-primary-foreground glow-pink group-hover:scale-105 transition">
                   Request Custom Figure <ArrowUpRight className="h-4 w-4" />
                 </span>
               </div>

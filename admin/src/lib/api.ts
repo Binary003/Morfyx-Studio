@@ -1,6 +1,5 @@
 // Admin API Client
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
-const TOKEN_KEY = "morfyx_admin_token";
 
 interface RequestOptions extends RequestInit {
     withCredentials?: boolean;
@@ -8,22 +7,9 @@ interface RequestOptions extends RequestInit {
 
 class AdminApiClient {
     private baseUrl: string;
-    private accessToken: string | null = null;
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
-        // Load token from localStorage if available
-        this.accessToken = localStorage.getItem(TOKEN_KEY);
-    }
-
-    setAccessToken(token: string) {
-        this.accessToken = token;
-        localStorage.setItem(TOKEN_KEY, token);
-    }
-
-    clearAccessToken() {
-        this.accessToken = null;
-        localStorage.removeItem(TOKEN_KEY);
     }
 
     private async request<T>(
@@ -45,11 +31,6 @@ class AdminApiClient {
             headers["Content-Type"] = "application/json";
         }
 
-        // Add Authorization header if token exists
-        if (this.accessToken) {
-            headers["Authorization"] = `Bearer ${this.accessToken}`;
-        }
-
         fetchOptions.headers = {
             ...headers,
             ...options.headers,
@@ -60,7 +41,6 @@ class AdminApiClient {
         if (!response.ok) {
             // Handle 401 - token expired or invalid
             if (response.status === 401) {
-                this.clearAccessToken();
                 window.location.href = "/login";
             }
 
@@ -83,24 +63,13 @@ class AdminApiClient {
             },
         });
 
-        // Token is set in httpOnly cookie by backend
-        // This is handled by credentials: "include"
-        // Also try to extract access_token from response if available for Authorization header
-        if (response.data?.accessToken) {
-            this.setAccessToken(response.data.accessToken);
-        }
-
         return response;
     }
 
     async logout() {
-        try {
-            await this.request("/auth/logout", {
-                method: "POST",
-            });
-        } finally {
-            this.clearAccessToken();
-        }
+        return this.request("/auth/logout", {
+            method: "POST",
+        });
     }
 
     async refreshToken() {

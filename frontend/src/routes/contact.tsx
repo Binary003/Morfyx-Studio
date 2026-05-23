@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import { PageShell, PageHero } from "@/components/site/PageShell";
 import { Mail, MapPin, MessageCircle } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
@@ -17,28 +18,88 @@ export const Route = createFileRoute("/contact")({
 
 function ContactPage() {
   const whatsappUrl = buildWhatsAppUrl("Hi Morfyx Studio, I have a question about an order / product.");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+  const [formError, setFormError] = useState("");
+
+  const subject = (form.subject || "Contact request from website").trim();
+  const body = [
+    `Name: ${form.name.trim()}`,
+    `Email: ${form.email.trim()}`,
+    "",
+    "Message:",
+    form.message.trim(),
+  ].join("\n");
+  const gmailComposeUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent("morfyxstudio@gmail.com")}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
   return (
     <PageShell>
       <PageHero eyebrow="Contact" title="Talk to our studio team" desc="We reply within 24 hours. For custom commissions, message us on WhatsApp." />
       <section className="py-16">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 grid lg:grid-cols-[1.2fr_1fr] gap-8">
-          <form onSubmit={(e) => e.preventDefault()} className="glass neon-border rounded-3xl p-8 flex flex-col gap-4">
+          <form className="glass neon-border rounded-3xl p-8 flex flex-col gap-4">
             <div className="grid sm:grid-cols-2 gap-4">
-              <input required maxLength={120} placeholder="Your name" className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent" />
-              <input required type="email" maxLength={255} placeholder="Email" className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent" />
+              <input
+                required
+                maxLength={120}
+                placeholder="Your name"
+                value={form.name}
+                onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
+                className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent"
+              />
+              <input
+                required
+                type="email"
+                maxLength={255}
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent"
+              />
             </div>
-            <input maxLength={200} placeholder="Subject" className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent" />
-            <textarea required maxLength={1500} rows={6} placeholder="How can we help?" className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent resize-none" />
-            <button className="self-start inline-flex items-center gap-2 rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
+            <input
+              maxLength={200}
+              placeholder="Subject"
+              value={form.subject}
+              onChange={(e) => setForm((prev) => ({ ...prev, subject: e.target.value }))}
+              className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent"
+            />
+            <textarea
+              required
+              maxLength={1500}
+              rows={6}
+              placeholder="How can we help?"
+              value={form.message}
+              onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
+              className="bg-secondary/40 border border-border rounded-xl px-4 py-3 outline-none focus:border-accent resize-none"
+            />
+            {formError && <div className="text-sm text-red-400">{formError}</div>}
+            <a
+              href={gmailComposeUrl}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(e) => {
+                if (!form.name.trim() || !form.email.trim() || !form.message.trim()) {
+                  e.preventDefault();
+                  setFormError("Please fill in name, email, and message before sending.");
+                  return;
+                }
+                setFormError("");
+              }}
+              className="self-start inline-flex items-center gap-2 rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
+            >
               Send Message
-            </button>
+            </a>
           </form>
 
           <div className="flex flex-col gap-4">
             {[
-              { icon: Mail, t: "Email", d: "hello@morfyxstudio.in" },
-              { icon: MessageCircle, t: "WhatsApp", d: "+91 99999 99999", href: whatsappUrl },
+              { icon: Mail, t: "Email", d: "morfyxstudio@gmail.com" },
+              { icon: MessageCircle, t: "WhatsApp", d: "+91 9696881479 ", href: whatsappUrl },
               { icon: MapPin, t: "Studio", d: "India · Single studio" },
             ].map((c) => (
               <a

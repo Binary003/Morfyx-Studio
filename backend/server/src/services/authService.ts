@@ -2,6 +2,7 @@ import { User } from "../models/User";
 import { ApiError } from "../utils/apiError";
 import { signAccessToken, signRefreshToken } from "../utils/token";
 import { sendEmail, templates } from "./emailService";
+import crypto from "crypto";
 
 export const registerUser = async (name: string, email: string, password: string, phone?: string) => {
   const existing = await User.findOne({ email });
@@ -26,9 +27,18 @@ export const authenticateUser = async (email: string, password: string) => {
   return { user, accessToken, refreshToken };
 };
 
-export const createResetToken = async (email: string, resetUrl: string) => {
+export const createResetToken = async (email: string, baseUrl: string) => {
   const user = await User.findOne({ email });
-  if (!user) throw new ApiError(404, "User not found");
+  // Prevent user enumeration: return silently even when user is missing.
+  if (!user) return;
+
+  const rawToken = crypto.randomBytes(32).toString("hex");
+  const tokenHash = crypto.createHash("sha256").update(rawToken).digest("hex");
+  const resetUrl = `${baseUrl}/reset-password?token=${rawToken}`;
+
+  user.resetPasswordTokenHash = tokenHash;
+  user.resetPasswordExpiresAt = new Date(Date.now() + 15 * 60 * 1000);
+  await user.save();
 
   await sendEmail(user.email, "Reset your password", templates.passwordReset(resetUrl));
 };

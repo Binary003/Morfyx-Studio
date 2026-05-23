@@ -31,8 +31,9 @@ interface Order {
 function OrdersPage() {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useAuth();
-  const search = useSearch({ from: "/orders" });
+  const search = useSearch({ from: "/orders" }) as { success?: boolean; message?: string };
   const [orders, setOrders] = useState<Order[]>([]);
+  const [pagination, setPagination] = useState({ page: 1, limit: 6, total: 0, pages: 0 });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState(
@@ -60,9 +61,13 @@ function OrdersPage() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const response = await api.getOrders({ page: 1, limit: 50 });
-        if (response?.data?.orders || response?.data?.items) {
-          setOrders(response.data.orders || response.data.items);
+        const response = await api.getOrders({ page: pagination.page, limit: pagination.limit });
+        if (response?.data?.items || response?.data?.orders) {
+          setOrders(response.data.items || response.data.orders);
+          setPagination((prev) => ({
+            ...prev,
+            ...(response.data.pagination || {}),
+          }));
         } else if (Array.isArray(response?.data)) {
           setOrders(response.data);
         }
@@ -79,7 +84,16 @@ function OrdersPage() {
     };
 
     fetchOrders();
-  }, [isAuthenticated, navigate, successMessage]);
+
+    // Keep order status/tracking in sync with admin updates.
+    const intervalId = window.setInterval(() => {
+      fetchOrders();
+    }, 15000);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [isAuthenticated, navigate, successMessage, pagination.page, pagination.limit]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -211,41 +225,54 @@ function OrdersPage() {
               </Link>
             </div>
           ) : (
-            <div className="glass neon-border rounded-3xl p-8">
-              <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground mb-6">Signed in as</div>
-              <div className="text-lg font-semibold mb-6">{user?.name}</div>
+            <div className="glass neon-border rounded-3xl p-6 sm:p-8">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
+                <div>
+                  <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Signed in as</div>
+                  <div className="text-lg font-semibold mt-1">{user?.name}</div>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Showing {orders.length} of {pagination.total} orders
+                </div>
+              </div>
 
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {orders.map((order) => (
-                  <div key={order._id || order.id} className="border border-white/10 rounded-2xl p-5 sm:p-6 hover:border-white/20 hover:bg-white/5 transition">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div key={order._id || order.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 sm:p-5 hover:border-white/20 transition">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0 flex-1">
-                        <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Order ID</div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Order</div>
+                          <div className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getStatusBadgeClass(order.orderStatus)}`}>
+                            {order.orderStatus}
+                          </div>
+                        </div>
                         <div className="mt-1 font-mono text-xs sm:text-sm font-semibold leading-5 break-all text-white/90">
                           {order.orderNumber || order._id}
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                        <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
                           <span>{order.orderedProducts?.length || 0} item{(order.orderedProducts?.length || 0) === 1 ? "" : "s"}</span>
                           <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                          <span>₹{(order.totalAmount || 0).toLocaleString('en-IN')}</span>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-start gap-3 sm:items-end sm:text-right shrink-0">
-                        <div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Payment</div>
-                          <div className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getPaymentBadgeClass(order.paymentInfo?.status)}`}>
+                      <div className="grid grid-cols-3 gap-3 lg:min-w-[260px]">
+                        <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+                          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Payment</div>
+                          <div className={`mt-1 inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getPaymentBadgeClass(order.paymentInfo?.status)}`}>
                             {getPaymentStatusLabel(order.paymentInfo?.status)}
                           </div>
                         </div>
-                        <div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Shipping</div>
-                          <div className={`inline-flex mt-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
+                        <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+                          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Shipping</div>
+                          <div className={`mt-1 inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
                             {getShipmentStatusLabel(order.shipmentStatus)}
                           </div>
                         </div>
-                        <div>
-                          <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</div>
-                          <div className="text-lg font-bold mt-1 text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                        <div className="rounded-xl border border-white/10 bg-black/10 p-3 text-right">
+                          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Total</div>
+                          <div className="text-base sm:text-lg font-bold mt-1 text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
                         </div>
                       </div>
                     </div>
@@ -253,11 +280,11 @@ function OrdersPage() {
                     {order.orderedProducts && order.orderedProducts.length > 0 && (
                       <div className="mt-4 pt-4 border-t border-white/10">
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Items</div>
-                        <div className="space-y-2">
+                        <div className="grid gap-2 sm:grid-cols-2">
                           {order.orderedProducts.map((item, idx) => (
-                            <div key={idx} className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">{item?.name || `Product (${item?.quantity || 1}x)`}</span>
-                              <span>₹{((item?.price || 0) * (item?.quantity || 1)).toLocaleString('en-IN')}</span>
+                            <div key={idx} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm gap-3">
+                              <span className="min-w-0 flex-1 truncate text-muted-foreground">{item?.name || `Product (${item?.quantity || 1}x)`}</span>
+                              <span className="shrink-0 text-white/90">x{item?.quantity || 1}</span>
                             </div>
                           ))}
                         </div>
@@ -273,6 +300,32 @@ function OrdersPage() {
                   </div>
                 ))}
               </div>
+
+              {pagination.pages > 1 && (
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="text-xs text-muted-foreground">
+                    Page {pagination.page} of {pagination.pages}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPagination((prev) => ({ ...prev, page: Math.max(1, prev.page - 1) }))}
+                      disabled={pagination.page <= 1}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPagination((prev) => ({ ...prev, page: Math.min(prev.pages, prev.page + 1) }))}
+                      disabled={pagination.page >= pagination.pages}
+                      className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold disabled:opacity-40"
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

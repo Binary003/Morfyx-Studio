@@ -1,4 +1,4 @@
-import { LogIn, Minus, Plus, ShoppingBag, Ticket, Trash2, X } from "lucide-react";
+import { LogIn, Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { formatPrice } from "@/lib/products";
 import { useCart } from "@/lib/cart";
@@ -12,7 +12,6 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
     const { isAuthenticated } = useAuth();
     const [authPromptOpen, setAuthPromptOpen] = useState(false);
     const [cartOpen, setCartOpen] = useState(false);
-    const tax = 0; // tax removed per request
     const total = subtotal;
 
     const handleCheckout = () => {
@@ -28,7 +27,7 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
     return (
         <Sheet open={cartOpen} onOpenChange={setCartOpen}>
             <SheetTrigger asChild>{trigger}</SheetTrigger>
-            <SheetContent className="w-full sm:max-w-lg border-border/60 bg-background/95 glass flex flex-col">
+            <SheetContent className="max-sm:top-6 max-sm:h-[calc(100%-1.5rem)] max-sm:rounded-l-2xl w-full sm:top-4 sm:h-[calc(100%-2rem)] sm:rounded-l-2xl sm:max-w-lg border-border/60 bg-background/95 glass flex flex-col">
                 <SheetHeader>
                     <SheetTitle className="font-display text-2xl">Your Cart</SheetTitle>
                 </SheetHeader>
@@ -96,19 +95,12 @@ export function CartDrawer({ trigger }: { trigger: React.ReactNode }) {
                             <span className="text-muted-foreground">Subtotal</span>
                             <span>{formatPrice(subtotal)}</span>
                         </div>
-                        {/* Tax removed from totals */}
-                        <div className="mt-4 flex items-center justify-between text-base font-semibold">
-                            <span>Total</span>
-                            <span className="text-gradient-neon font-display text-xl">{formatPrice(total)}</span>
-                        </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border/60 bg-secondary/30 p-5">
-                        <div className="flex items-center gap-2 text-sm font-semibold">
-                            <Ticket className="h-4 w-4" /> Offers
-                        </div>
                         <div className="mt-2 text-xs text-muted-foreground">
-                            Add a coupon at checkout or apply studio credits once you log in.
+                            Offer already applied in the displayed prices.
+                        </div>
+                        <div className="mt-4 flex items-center justify-between text-base font-semibold">
+                            <span>Final Total</span>
+                            <span className="text-gradient-neon font-display text-xl">{formatPrice(total)}</span>
                         </div>
                     </div>
 

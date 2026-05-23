@@ -17,6 +17,8 @@ export interface UserDocument extends Document {
   email: string;
   password: string;
   phone?: string;
+  resetPasswordTokenHash?: string;
+  resetPasswordExpiresAt?: Date;
   addresses: Address[];
   wishlist: Types.ObjectId[];
   orderHistory: Types.ObjectId[];
@@ -46,6 +48,8 @@ const userSchema = new Schema<UserDocument>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     phone: { type: String },
+    resetPasswordTokenHash: { type: String, select: false },
+    resetPasswordExpiresAt: { type: Date, select: false },
     addresses: { type: [addressSchema], default: [] },
     wishlist: [{ type: Schema.Types.ObjectId, ref: "Product" }],
     orderHistory: [{ type: Schema.Types.ObjectId, ref: "Order" }],
