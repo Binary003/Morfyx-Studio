@@ -9,12 +9,20 @@ export const createOrder = async (payload: any) => {
     throw new ApiError(400, "Order items are required");
   }
 
+  type NormalizedOrderItem = {
+    product: unknown;
+    name: string;
+    price: number;
+    quantity: number;
+    image?: string;
+  };
+
   const productIds = orderedProducts.map((item: any) => String(item.product));
   const uniqueProductIds = Array.from(new Set(productIds));
   const products = await Product.find({ _id: { $in: uniqueProductIds }, status: "active" });
   const productMap = new Map(products.map((p) => [String(p._id), p]));
 
-  const normalizedItems = orderedProducts.map((item: any) => {
+  const normalizedItems: NormalizedOrderItem[] = orderedProducts.map((item: any) => {
     const productId = String(item.product);
     const product = productMap.get(productId);
     const quantity = Number(item.quantity);
@@ -42,7 +50,9 @@ export const createOrder = async (payload: any) => {
   });
 
   const totalAmount = Number(
-    normalizedItems.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)
+    normalizedItems
+      .reduce((sum: number, item: NormalizedOrderItem) => sum + item.price * item.quantity, 0)
+      .toFixed(2)
   );
 
   return Order.create({
