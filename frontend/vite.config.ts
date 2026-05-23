@@ -5,7 +5,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig(({ command }) => {
+export default defineConfig(({ command, isSsrBuild }) => {
   const plugins = [
     tanstackStart({
       // Redirect TanStack Start's bundled server entry to src/server.ts (SSR error wrapper).
