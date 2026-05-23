@@ -61,7 +61,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/health", (_req, res) => {
+app.get("/", (_req, res) => {
   res.json({ success: true, message: "API healthy" });
 });
 
