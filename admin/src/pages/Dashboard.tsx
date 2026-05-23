@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { SectionHeader } from "../components/common/SectionHeader";
 import { StatCard } from "../components/common/StatCard";
@@ -9,15 +8,7 @@ import { RadialChart } from "../components/charts/RadialChart";
 import { Table, TableBody, TableCell, TableHead, TableHeaderCell, TableRow } from "../components/ui/table";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import { ToastRail } from "../components/feedback/ToastRail";
 import { orders, statCards } from "../data/mock";
-import { api } from "../lib/api";
-
-type NotificationNote = {
-    id?: string;
-    title: string;
-    description: string;
-};
 
 const revenueData = [12, 20, 18, 28, 24, 36, 30, 40];
 const salesData = [14, 20, 12, 30, 26, 18, 28, 34, 30, 38, 42, 46];
@@ -32,28 +23,6 @@ const statusMap: Record<string, "info" | "success" | "warning" | "danger"> = {
 };
 
 export function DashboardPage() {
-    const [notes, setNotes] = useState<NotificationNote[]>([]);
-
-    useEffect(() => {
-        const loadNotifications = async () => {
-            try {
-                const response: any = await api.getNotifications();
-                const items = response?.data?.items || response?.items || [];
-                setNotes(
-                    (Array.isArray(items) ? items : []).slice(0, 3).map((item: any) => ({
-                        id: item._id || item.id,
-                        title: item.title,
-                        description: item.message,
-                    }))
-                );
-            } catch {
-                setNotes([]);
-            }
-        };
-
-        loadNotifications();
-    }, []);
-
     return (
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <SectionHeader
@@ -134,7 +103,7 @@ export function DashboardPage() {
                 </Card>
             </div>
 
-            <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            <div className="mt-8 grid gap-6 lg:grid-cols-2">
                 <Card>
                     <CardHeader>
                         <CardTitle>Top Category</CardTitle>
@@ -166,14 +135,6 @@ export function DashboardPage() {
                                 <span className="text-neonPurple">312</span>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Live Notifications</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <ToastRail notes={notes.length > 0 ? notes : undefined} />
                     </CardContent>
                 </Card>
             </div>

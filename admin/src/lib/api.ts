@@ -250,10 +250,6 @@ class AdminApiClient {
         return this.request<any>(`/orders/${id}`);
     }
 
-    async getNotifications() {
-        return this.request<any>("/notifications");
-    }
-
     async updateOrder(id: string, data: { status?: string; trackingId?: string; shipmentStatus?: string }) {
         return this.request(`/orders/${id}/status`, {
             method: "PUT",

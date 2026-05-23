@@ -18,7 +18,6 @@ const titles: Record<string, string> = {
     "/offers": "Offers & Banners",
     "/analytics": "Analytics",
     "/reviews": "Reviews",
-    "/notifications": "Notifications",
     "/settings": "Settings",
     "/profile": "Admin Profile",
 };

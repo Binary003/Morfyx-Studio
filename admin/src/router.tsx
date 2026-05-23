@@ -10,7 +10,6 @@ import { InventoryPage } from "./pages/Inventory";
 import { OffersPage } from "./pages/Offers";
 import { AnalyticsPage } from "./pages/Analytics";
 import { ReviewsPage } from "./pages/Reviews";
-import { NotificationsPage } from "./pages/Notifications";
 import { SettingsPage } from "./pages/Settings";
 import { ProfilePage } from "./pages/Profile";
 import { LoginPage } from "./pages/Login";
@@ -41,7 +40,6 @@ export const router = createBrowserRouter([
             { path: "offers", element: <OffersPage /> },
             { path: "analytics", element: <AnalyticsPage /> },
             { path: "reviews", element: <ReviewsPage /> },
-            { path: "notifications", element: <NotificationsPage /> },
             { path: "settings", element: <SettingsPage /> },
             { path: "profile", element: <ProfilePage /> },
         ],

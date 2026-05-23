@@ -14,7 +14,6 @@ import {
     Star,
     UserCircle,
     Users,
-    Bell,
 } from "lucide-react";
 import { useMedia } from "../../hooks/use-media";
 import { useUiStore } from "../../store/uiStore";
@@ -30,7 +29,6 @@ const navItems = [
     { label: "Offers & Banners", to: "/offers", icon: Megaphone },
     { label: "Analytics", to: "/analytics", icon: BarChart3 },
     { label: "Reviews", to: "/reviews", icon: Star },
-    { label: "Notifications", to: "/notifications", icon: Bell },
     { label: "Settings", to: "/settings", icon: Cog },
     { label: "Admin Profile", to: "/profile", icon: UserCircle },
 ];
