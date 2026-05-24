@@ -396,11 +396,28 @@ export function ProductFormPage() {
                     <CardContent className="space-y-4">
                         <div className="relative aspect-square overflow-hidden rounded-2xl border border-border/60 bg-card/40">
                             {form.images.length > 0 ? (
+                                (() => {
+                                    const previewImage = form.images[0];
+                                    const previewSrc = previewImage?.file
+                                        ? URL.createObjectURL(previewImage.file)
+                                        : previewImage?.url;
+
+                                    if (!previewSrc) {
+                                        return (
+                                            <div className="h-full w-full flex items-center justify-center text-mutedForeground text-sm">
+                                                Upload images to see preview
+                                            </div>
+                                        );
+                                    }
+
+                                    return (
                                 <img
-                                    src={form.images[0].file ? URL.createObjectURL(form.images[0].file) : form.images[0].url}
+                                    src={previewSrc}
                                     alt={form.name || "Preview"}
                                     className="h-full w-full object-cover"
                                 />
+                                    );
+                                })()
                             ) : (
                                 <div className="h-full w-full flex items-center justify-center text-mutedForeground text-sm">
                                     Upload images to see preview

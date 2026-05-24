@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from "react";
+import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cn } from "../../utils/cn";
 
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
@@ -17,10 +17,10 @@ export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowEle
     return <tr className={cn("hover:bg-card/40 transition", className)} {...props} />;
 }
 
-export function TableCell({ className, ...props }: HTMLAttributes<HTMLTableCellElement>) {
+export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
     return <td className={cn("px-4 py-3", className)} {...props} />;
 }
 
-export function TableHeaderCell({ className, ...props }: HTMLAttributes<HTMLTableCellElement>) {
+export function TableHeaderCell({ className, ...props }: ThHTMLAttributes<HTMLTableCellElement>) {
     return <th className={cn("px-4 py-3 font-semibold", className)} {...props} />;
 }

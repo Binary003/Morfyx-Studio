@@ -2,11 +2,12 @@ import type { HTMLAttributes } from "react";
 import { cn } from "../../utils/cn";
 
 interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-    variant?: "default" | "success" | "warning" | "danger" | "info";
+    variant?: "default" | "success" | "warning" | "danger" | "info" | "outline";
 }
 
 const variants: Record<NonNullable<BadgeProps["variant"]>, string> = {
     default: "bg-muted text-mutedForeground",
+    outline: "border border-border/60 bg-transparent text-mutedForeground",
     success: "bg-emerald-500/20 text-emerald-200",
     warning: "bg-amber-500/20 text-amber-200",
     danger: "bg-rose-500/20 text-rose-200",
