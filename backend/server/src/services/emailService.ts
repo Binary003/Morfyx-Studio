@@ -1,18 +1,13 @@
-import { mailTransporter } from "../config/mail";
+import { sendResendEmail } from "../config/mail";
 import { env } from "../config/env";
 import { OrderDocument } from "../models/Order";
 
 export const sendEmail = async (to: string, subject: string, html: string) => {
   const start = Date.now();
   try {
-    const info = await mailTransporter.sendMail({
-      from: `Morfyx Studio <${env.emailFrom}>`,
-      to,
-      subject,
-      html
-    });
+    const info = await sendResendEmail({ to, subject, html });
     const duration = Date.now() - start;
-    console.log(`✉️ Email sent to ${to} (subject: ${subject}) — messageId: ${info.messageId}, duration: ${duration}ms`);
+    console.log(`✉️ Email sent to ${to} (subject: ${subject}) — messageId: ${info?.id || info?.messageId || "n/a"}, duration: ${duration}ms`);
     return info;
   } catch (err) {
     const duration = Date.now() - start;
