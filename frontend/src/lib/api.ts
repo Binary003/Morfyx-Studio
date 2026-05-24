@@ -1,5 +1,23 @@
 // Frontend API Client
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+function normalizeApiBaseUrl(rawBaseUrl: string | undefined): string {
+    const fallbackBaseUrl = "http://localhost:5000/api";
+    const baseUrl = rawBaseUrl?.trim() || fallbackBaseUrl;
+
+    try {
+        const parsedUrl = new URL(baseUrl);
+        if (parsedUrl.pathname === "/" || parsedUrl.pathname === "") {
+            parsedUrl.pathname = "/api";
+        }
+        return parsedUrl.toString().replace(/\/$/, "");
+    } catch {
+        if (baseUrl.startsWith("/")) {
+            return baseUrl.endsWith("/api") ? baseUrl : `${baseUrl.replace(/\/$/, "")}/api`;
+        }
+        return baseUrl.replace(/\/$/, "");
+    }
+}
+
+const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
 
 interface RequestOptions extends RequestInit {
     withCredentials?: boolean;
