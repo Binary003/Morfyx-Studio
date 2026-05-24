@@ -111,23 +111,23 @@ export function ProductsSection({
 
             {activeProduct && (
                 <div
-                    className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm grid place-items-center p-4"
+                    className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm grid place-items-center p-2 sm:p-4"
                     onClick={() => setActiveProduct(null)}
                 >
                     <div
-                        className="relative max-w-3xl w-full glass neon-border rounded-3xl overflow-hidden"
+                        className="relative max-w-3xl w-full max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] glass neon-border rounded-2xl sm:rounded-3xl overflow-hidden"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <button
                             type="button"
                             onClick={() => setActiveProduct(null)}
-                            className="absolute right-4 top-4 h-9 w-9 rounded-full glass grid place-items-center hover:glow-pink transition z-10"
+                            className="absolute right-3 top-3 h-8 w-8 rounded-full glass grid place-items-center hover:glow-pink transition z-10 sm:right-4 sm:top-4 sm:h-9 sm:w-9"
                             aria-label="Close"
                         >
-                            <X className="h-4 w-4" />
+                            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                         </button>
-                        <div className="grid md:grid-cols-2">
-                            <div className="relative min-h-[320px]">
+                        <div className="grid md:grid-cols-2 max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] overflow-y-auto">
+                            <div className="relative min-h-[220px] sm:min-h-[320px]">
                                 <img
                                     src={activeProduct.img}
                                     alt={activeProduct.name}
@@ -140,11 +140,11 @@ export function ProductsSection({
                                     </span>
                                 )}
                             </div>
-                            <div className="p-8 flex flex-col gap-4">
+                            <div className="p-4 sm:p-8 flex flex-col gap-3 sm:gap-4">
                                 <div className="text-[10px] uppercase tracking-[0.3em] text-accent">
                                     {activeProduct.category}
                                 </div>
-                                <h3 className="font-display text-3xl">
+                                <h3 className="font-display text-2xl sm:text-3xl leading-tight">
                                     {activeProduct.name}
                                 </h3>
                                 <div className="flex items-center gap-1 text-xs">
@@ -157,13 +157,13 @@ export function ProductsSection({
                                         {activeProduct.stock !== undefined && activeProduct.stock > 0 ? `In Stock (${activeProduct.stock})` : "Out of Stock"}
                                     </span>
                                 </div>
-                                <p className="text-muted-foreground">
+                                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                                     {activeProduct.description}
                                 </p>
 
-                                <div className="flex items-end justify-between gap-4 pt-2">
+                                <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 pt-2">
                                     <div>
-                                        <div className="font-display text-3xl font-bold text-gradient-neon">
+                                        <div className="font-display text-2xl sm:text-3xl font-bold text-gradient-neon">
                                             {formatPrice(activeProduct.price)}
                                         </div>
                                         {activeProduct.oldPrice && (
@@ -176,7 +176,7 @@ export function ProductsSection({
                                         type="button"
                                         onClick={() => handleAddToCart(activeProduct)}
                                         disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
-                                        className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                                        className="w-full sm:w-auto rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                                     >
                                         Add to Cart
                                     </button>
@@ -224,7 +224,7 @@ function ProductCard({
             whileHover={{ y: -8 }}
             className="group glass rounded-3xl overflow-hidden flex flex-col text-left cursor-pointer"
         >
-            <div className="relative aspect-square overflow-hidden bg-secondary/50">
+            <div className="relative aspect-[4/5] sm:aspect-square overflow-hidden bg-secondary/50">
                 <img
                     src={product.img}
                     alt={product.name}
@@ -232,18 +232,18 @@ function ProductCard({
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                 />
                 {product.badge && (
-                    <span className="absolute top-3 left-3 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 glow-pink">
+                    <span className="absolute top-3 left-3 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 glow-pink max-sm:text-[9px] max-sm:px-2 max-sm:py-0.5">
                         {product.badge}
                     </span>
                 )}
-                <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition">
+                <div className="absolute right-3 top-3 hidden flex-col gap-2 opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition sm:flex">
                     <span className="h-9 w-9 rounded-full glass grid place-items-center">
                         <Box className="h-4 w-4" />
                     </span>
                 </div>
             </div>
 
-            <div className="p-5 flex flex-col gap-3 flex-1">
+            <div className="p-4 sm:p-5 flex flex-col gap-2 sm:gap-3 flex-1">
                 <div className="flex items-center gap-1 text-xs">
                     {Array.from({ length: 5 }).map((_, j) => (
                         <Star key={j} className="h-3 w-3 fill-accent text-accent" />
@@ -253,10 +253,10 @@ function ProductCard({
                 <div className="text-[10px] uppercase tracking-[0.3em] text-accent">
                     {product.category}
                 </div>
-                <h3 className="font-medium leading-snug">{product.name}</h3>
-                <div className="mt-auto flex items-end justify-between gap-3">
+                <h3 className="font-medium leading-snug text-sm sm:text-base">{product.name}</h3>
+                <div className="mt-auto flex flex-col items-start gap-3 sm:flex-row sm:items-end sm:justify-between sm:gap-3">
                     <div>
-                        <div className="font-display text-2xl font-bold text-gradient-neon">
+                        <div className="font-display text-xl sm:text-2xl font-bold text-gradient-neon">
                             {formatPrice(product.price)}
                         </div>
                         {product.oldPrice && (
