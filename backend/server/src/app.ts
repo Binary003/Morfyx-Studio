@@ -52,6 +52,14 @@ function isAllowedOrigin(origin: string): boolean {
     const { protocol, hostname } = new URL(origin);
     if (protocol !== "https:") return false;
 
+    if (hostname === "morfyxstudio.com" || hostname === "admin.morfyxstudio.com") {
+      return true;
+    }
+
+    if (hostname.endsWith(".morfyxstudio.com")) {
+      return true;
+    }
+
     // Allow Vercel preview/prod domains for the frontend and admin apps.
     if (hostname.endsWith(".vercel.app")) {
       // Accept common project prefixes or any vercel host that contains the project name.
