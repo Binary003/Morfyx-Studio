@@ -43,18 +43,42 @@ if (env.nodeEnv === "development") {
 
 app.use(apiLimiter);
 
+const allowedOrigins = new Set(env.frontendUrls);
+
+function isAllowedOrigin(origin: string): boolean {
+  if (allowedOrigins.has(origin)) return true;
+
+  try {
+    const { protocol, hostname } = new URL(origin);
+    if (protocol !== "https:") return false;
+
+    // Allow Vercel preview/prod domains for this frontend project name.
+    if (hostname.endsWith(".vercel.app") && hostname.startsWith("morfyx-frontend")) {
+      return true;
+    }
+  } catch {
+    return false;
+  }
+
+  return false;
+}
+
 app.use(
   cors({
-    origin: env.frontendUrls,
+    origin: (origin, callback) => {
+      // Allow non-browser clients and same-origin/server-to-server calls.
+      if (!origin) return callback(null, true);
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
   })
 );
 
-const allowedOrigins = new Set(env.frontendUrls);
 app.use((req, res, next) => {
   if (["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
     const origin = req.headers.origin;
-    if (origin && !allowedOrigins.has(origin)) {
+    if (origin && !isAllowedOrigin(origin)) {
       return res.status(403).json({ success: false, message: "Invalid request origin" });
     }
   }
