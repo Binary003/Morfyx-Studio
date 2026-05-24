@@ -53,11 +53,15 @@ function isAllowedOrigin(origin: string): boolean {
     if (protocol !== "https:") return false;
 
     // Allow Vercel preview/prod domains for the frontend and admin apps.
-    if (
-      hostname.endsWith(".vercel.app") &&
-      (hostname.startsWith("morfyx-frontend") || hostname.startsWith("morfyx-studio-admin"))
-    ) {
-      return true;
+    if (hostname.endsWith(".vercel.app")) {
+      // Accept common project prefixes or any vercel host that contains the project name.
+      if (
+        hostname.startsWith("morfyx-frontend") ||
+        hostname.startsWith("morfyx-studio-admin") ||
+        hostname.includes("morfyx")
+      ) {
+        return true;
+      }
     }
   } catch {
     return false;
