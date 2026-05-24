@@ -52,8 +52,11 @@ function isAllowedOrigin(origin: string): boolean {
     const { protocol, hostname } = new URL(origin);
     if (protocol !== "https:") return false;
 
-    // Allow Vercel preview/prod domains for this frontend project name.
-    if (hostname.endsWith(".vercel.app") && hostname.startsWith("morfyx-frontend")) {
+    // Allow Vercel preview/prod domains for the frontend and admin apps.
+    if (
+      hostname.endsWith(".vercel.app") &&
+      (hostname.startsWith("morfyx-frontend") || hostname.startsWith("morfyx-studio-admin"))
+    ) {
       return true;
     }
   } catch {
