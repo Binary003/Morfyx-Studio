@@ -65,18 +65,25 @@ app.get("/", (_req, res) => {
   res.json({ success: true, message: "API healthy" });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/categories", categoryRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/customers", customerRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/reviews", reviewRoutes);
-app.use("/api/wishlist", wishlistRoutes);
-app.use("/api/analytics", analyticsRoutes);
-app.use("/api/inventory", inventoryRoutes);
-app.use("/api/notifications", notificationRoutes);
-app.use("/api/offers", offerStripRoutes);
+const routeGroups = [
+  ["/api", ""],
+  ["", ""]
+] as const;
+
+for (const [prefix] of routeGroups) {
+  app.use(`${prefix}/auth`, authRoutes);
+  app.use(`${prefix}/products`, productRoutes);
+  app.use(`${prefix}/categories`, categoryRoutes);
+  app.use(`${prefix}/orders`, orderRoutes);
+  app.use(`${prefix}/customers`, customerRoutes);
+  app.use(`${prefix}/payments`, paymentRoutes);
+  app.use(`${prefix}/reviews`, reviewRoutes);
+  app.use(`${prefix}/wishlist`, wishlistRoutes);
+  app.use(`${prefix}/analytics`, analyticsRoutes);
+  app.use(`${prefix}/inventory`, inventoryRoutes);
+  app.use(`${prefix}/notifications`, notificationRoutes);
+  app.use(`${prefix}/offers`, offerStripRoutes);
+}
 
 app.use(notFound);
 app.use(errorHandler);
