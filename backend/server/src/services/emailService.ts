@@ -181,7 +181,7 @@ export const templates = {
       <p><strong>Order ID:</strong> ${orderId}</p>
       <p><strong>Customer:</strong> ${customerName}</p>
       <p><strong>Total Amount:</strong> ₹${totalAmount}</p>
-      <p><a href="https://admin.morfyx.com/orders/${orderId}">View Order in Admin Panel</a></p>
+      <p><a href="https://admin.morfyxstudio.com/orders?orderId=${orderId}">Open Order in Admin Portal</a></p>
     </div>
   `,
   adminPaymentNotification: (order: OrderDocument) => `
@@ -232,7 +232,7 @@ export const templates = {
       
       <p style="margin-top: 20px;">The Shiprocket shipment has been automatically created. Please proceed with packing and preparing for pickup.</p>
       
-      <p style="margin-top: 20px;"><a href="https://admin.morfyx.com/orders/${order._id}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">View in Admin Panel</a></p>
+      <p style="margin-top: 20px;"><a href="https://admin.morfyxstudio.com/orders?orderId=${order._id}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Open Order in Admin Portal</a></p>
     </div>
   `
 };

@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import type { HTMLAttributes, TdHTMLAttributes, ThHTMLAttributes } from "react";
 import { cn } from "../../utils/cn";
 
@@ -13,9 +14,13 @@ export function TableBody({ className, ...props }: HTMLAttributes<HTMLTableSecti
     return <tbody className={cn("divide-y divide-border/60", className)} {...props} />;
 }
 
-export function TableRow({ className, ...props }: HTMLAttributes<HTMLTableRowElement>) {
-    return <tr className={cn("hover:bg-card/40 transition", className)} {...props} />;
-}
+export const TableRow = forwardRef<HTMLTableRowElement, HTMLAttributes<HTMLTableRowElement>>(
+    function TableRow({ className, ...props }, ref) {
+        return <tr ref={ref} className={cn("hover:bg-card/40 transition", className)} {...props} />;
+    }
+);
+
+TableRow.displayName = "TableRow";
 
 export function TableCell({ className, ...props }: TdHTMLAttributes<HTMLTableCellElement>) {
     return <td className={cn("px-4 py-3", className)} {...props} />;

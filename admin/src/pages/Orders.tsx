@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { SectionHeader } from "../components/common/SectionHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
@@ -69,12 +70,33 @@ function formatOrderDate(date: string) {
 }
 
 export function OrdersPage() {
+    const [searchParams] = useSearchParams();
     const [orders, setOrders] = useState<Order[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [search, setSearch] = useState("");
+    const [search, setSearch] = useState(searchParams.get("orderId") || "");
     const [statusFilter, setStatusFilter] = useState("all");
     const [shipmentSaveState, setShipmentSaveState] = useState<Record<string, "idle" | "saving" | "saved" | "error">>({});
+    const orderRowRefs = useRef<Record<string, HTMLTableRowElement | null>>({});
+
+    useEffect(() => {
+        const orderId = searchParams.get("orderId");
+        if (orderId) {
+            setSearch(orderId);
+        }
+    }, [searchParams]);
+
+    useEffect(() => {
+        const orderId = searchParams.get("orderId");
+        if (!orderId || loading) {
+            return;
+        }
+
+        const row = orderRowRefs.current[orderId];
+        if (row) {
+            row.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, [loading, orders, searchParams]);
 
     useEffect(() => {
         const fetchOrders = async () => {
@@ -204,7 +226,13 @@ export function OrdersPage() {
                         </TableHead>
                         <TableBody>
                             {filtered.map((order) => (
-                                <TableRow key={order._id}>
+                                <TableRow
+                                    key={order._id}
+                                    ref={(node) => {
+                                        orderRowRefs.current[order._id] = node;
+                                    }}
+                                    className={searchParams.get("orderId") === order._id ? "bg-blue-500/10 ring-1 ring-blue-400/60" : undefined}
+                                >
                                     <TableCell>
                                         <div className="text-xs font-mono">{order._id}</div>
                                         <div className="mt-1 text-[11px] text-gray-500">
