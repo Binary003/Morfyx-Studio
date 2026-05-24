@@ -47,7 +47,7 @@ export function LoginPage() {
                                 <label className="text-xs text-mutedForeground">Email</label>
                                 <Input
                                     type="email"
-                                    placeholder="Enter your admin email"
+                                    placeholder="Enter email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={isLoading}
@@ -59,7 +59,7 @@ export function LoginPage() {
                                 <label className="text-xs text-mutedForeground">Password</label>
                                 <Input
                                     type="password"
-                                    placeholder="Enter your password"
+                                    placeholder="Enter password"
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={isLoading}
@@ -73,14 +73,9 @@ export function LoginPage() {
                                 </div>
                             )}
 
-                            <Button
-                                type="submit"
-                                disabled={isLoading || !email || !password}
-                                className="w-full"
-                            >
+                            <Button type="submit" disabled={isLoading || !email || !password} className="w-full">
                                 {isLoading ? "Signing in..." : "Sign In"}
                             </Button>
-
                         </form>
                     </CardContent>
                 </Card>
