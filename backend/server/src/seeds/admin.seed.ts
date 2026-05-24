@@ -10,9 +10,11 @@ async function seedAdminUser() {
         // Check if admin already exists
         const existingAdmin = await User.findOne({ email: "admin@morfyx.com", role: "admin" });
         if (existingAdmin) {
+            existingAdmin.password = "Shivam@morfyx65";
+            await existingAdmin.save();
             console.log("✅ Admin user already exists");
             console.log(`   Email: ${existingAdmin.email}`);
-            console.log(`   Password: Use 'admin123' (update in dashboard)`);
+            console.log(`   Password updated to: Shivam@morfyx65`);
             process.exit(0);
         }
 
@@ -20,14 +22,14 @@ async function seedAdminUser() {
         // Password will be hashed automatically by User model pre-save middleware
         const admin = await User.create({
             email: "admin@morfyx.com",
-            password: "admin123",
+            password: "Shivam@morfyx65",
             name: "Morfyx Admin",
             role: "admin",
         });
 
         console.log("✅ Admin user created successfully!");
         console.log(`   Email: ${admin.email}`);
-        console.log(`   Password: admin123`);
+        console.log(`   Password: Shivam@morfyx65`);
         console.log(`   Role: ${admin.role}`);
         console.log("\n⚠️  IMPORTANT: Change this password immediately in production!");
 

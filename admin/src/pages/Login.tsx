@@ -7,7 +7,7 @@ import { Button } from "../components/ui/button";
 import { useAuthStore } from "../store/authStore";
 
 export function LoginPage() {
-    const [email, setEmail] = useState("admin@morfyx.com");
+    const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const { login, isLoading, error, isAuthenticated } = useAuthStore();
     const navigate = useNavigate();
@@ -47,7 +47,7 @@ export function LoginPage() {
                                 <label className="text-xs text-mutedForeground">Email</label>
                                 <Input
                                     type="email"
-                                    placeholder="admin@morfyx.com"
+                                    placeholder="Enter your admin email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     disabled={isLoading}
@@ -81,11 +81,6 @@ export function LoginPage() {
                                 {isLoading ? "Signing in..." : "Sign In"}
                             </Button>
 
-                            <div className="text-xs text-mutedForeground text-center pt-2">
-                                <p>Demo credentials:</p>
-                                <p>Email: <code className="bg-secondary px-1 py-0.5 rounded">admin@morfyx.com</code></p>
-                                <p>Password: <code className="bg-secondary px-1 py-0.5 rounded">admin123</code></p>
-                            </div>
                         </form>
                     </CardContent>
                 </Card>
