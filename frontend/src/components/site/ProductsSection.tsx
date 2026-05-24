@@ -111,7 +111,7 @@ export function ProductsSection({
 
             {activeProduct && (
                 <div
-                    className="fixed inset-0 z-[70] bg-black/80 backdrop-blur-sm grid place-items-center p-2 sm:p-4"
+                    className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm grid place-items-center p-2 sm:p-4"
                     onClick={() => setActiveProduct(null)}
                 >
                     <div

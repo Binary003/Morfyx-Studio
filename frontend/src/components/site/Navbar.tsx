@@ -105,7 +105,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
       initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`fixed left-0 right-0 ${withOfferStrip ? "top-9" : "top-0"} z-50 transition-all duration-500 ${scrolled ? "py-3" : "py-5"
+      className={`fixed left-0 right-0 ${withOfferStrip ? "top-9" : "top-0"} z-40 transition-all duration-500 ${scrolled ? "py-3" : "py-5"
         }`}
     >
       <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8`}>
