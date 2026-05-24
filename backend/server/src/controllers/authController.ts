@@ -34,7 +34,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const user = await registerUser(name, email, password, phone);
   const accessToken = signAccessToken({ id: user.id, role: user.role });
   const refreshToken = signRefreshToken({ id: user.id, role: user.role });
-  setAuthCookies(res, accessToken, refreshToken);
+  setAuthCookies(req, res, accessToken, refreshToken);
 
   sendSuccess(res, { user }, "Registered successfully");
 });
@@ -44,7 +44,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   if (!email || !password) throw new ApiError(400, "Missing fields");
 
   const { user, accessToken, refreshToken } = await authenticateUser(email, password);
-  setAuthCookies(res, accessToken, refreshToken);
+  setAuthCookies(req, res, accessToken, refreshToken);
 
   sendSuccess(res, { user }, "Logged in");
 });
@@ -56,7 +56,7 @@ export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
   const { user, accessToken, refreshToken } = await authenticateUser(email, password);
   if (user.role !== "admin") throw new ApiError(403, "Admin access required");
 
-  setAuthCookies(res, accessToken, refreshToken);
+  setAuthCookies(req, res, accessToken, refreshToken);
   sendSuccess(res, { user }, "Admin logged in");
 });
 
@@ -68,12 +68,12 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
   const accessToken = signAccessToken({ id: decoded.id, role: decoded.role });
   const refreshToken = signRefreshToken({ id: decoded.id, role: decoded.role });
 
-  setAuthCookies(res, accessToken, refreshToken);
+  setAuthCookies(req, res, accessToken, refreshToken);
   sendSuccess(res, {}, "Token refreshed");
 });
 
-export const logout = asyncHandler(async (_req: Request, res: Response) => {
-  clearAuthCookies(res);
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+  clearAuthCookies(req, res);
   sendSuccess(res, {}, "Logged out");
 });
 
