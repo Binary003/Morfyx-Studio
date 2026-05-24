@@ -14,12 +14,13 @@ export type User = {
 type AuthContextValue = {
     user: User | null;
     isAuthenticated: boolean;
-    login: (user: User) => void;
+    login: (user: User, accessToken?: string) => void;
     logout: () => void;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const STORAGE_KEY = "morfyx-user";
+export const STORAGE_KEY = "morfyx-user";
+export const ACCESS_TOKEN_KEY = "morfyx_access_token";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User | null>(null);
@@ -43,18 +44,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setMounted(true);
     }, []);
 
-    const login = (nextUser: User) => {
+    const login = (nextUser: User, accessToken?: string) => {
         if (nextUser?.role === "admin") {
             return;
         }
 
         setUser(nextUser);
         localStorage.setItem(STORAGE_KEY, JSON.stringify(nextUser));
+        if (typeof accessToken === "string") {
+            localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+        }
     };
 
     const logout = () => {
         setUser(null);
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(ACCESS_TOKEN_KEY);
         // Clear auth cookies
         document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
         document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";

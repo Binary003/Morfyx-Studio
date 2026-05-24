@@ -60,13 +60,20 @@ function LoginPage() {
                     throw new Error("Please use the admin portal to sign in.");
                 }
 
-                login(response.data.user);
+                if (response.data.accessToken) {
+                    api.setAccessToken(response.data.accessToken);
+                }
+                login(response.data.user, response.data.accessToken);
                 navigate({ to: "/" });
             } else {
                 throw new Error("Invalid response from server");
             }
         } catch (err: any) {
-            const message = err.response?.data?.message || err.message || "Login failed. Please check your credentials.";
+            const status = err.response?.status;
+            const backendMessage = err.response?.data?.message || err.message;
+            const message = status === 401
+                ? "We couldn't sign you in with those details. If you're new here, create an account to continue."
+                : backendMessage || "Login failed. Please try again.";
             setError(message);
         } finally {
             setLoading(false);
@@ -110,6 +117,13 @@ function LoginPage() {
                             {error && (
                                 <div className="text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-600 font-medium">
                                     ⚠ {error}
+                                    {error.includes("create an account") && (
+                                        <div className="mt-2">
+                                            <Link to="/signup" className="font-semibold text-foreground underline underline-offset-4">
+                                                Sign up here
+                                            </Link>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                             <button

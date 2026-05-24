@@ -38,23 +38,27 @@ function Modal({ onClose }: { onClose: () => void }) {
       <motion.div
         initial={{ scale: 0.92, y: 20 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.92, y: 20 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative w-full max-w-2xl glass neon-border rounded-3xl p-6 sm:p-10 my-8"
+        className="relative w-full max-w-2xl max-sm:max-w-[calc(100vw-1rem)] glass neon-border rounded-2xl sm:rounded-3xl p-5 pt-14 sm:p-10 my-4 sm:my-8 shadow-2xl"
       >
-        <button onClick={onClose} className="absolute top-4 right-4 h-9 w-9 rounded-full glass grid place-items-center hover:glow-pink transition" aria-label="Close">
-          <X className="h-4 w-4" />
+        <button
+          onClick={onClose}
+          className="absolute top-3 right-3 z-10 h-8 w-8 rounded-full glass grid place-items-center hover:glow-pink transition sm:top-4 sm:right-4 sm:h-9 sm:w-9"
+          aria-label="Close"
+        >
+          <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
         </button>
 
         <div className="inline-flex items-center gap-2 glass rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-accent">
           <Sparkles className="h-3 w-3" /> Custom Commission
         </div>
-        <h3 className="font-display text-3xl sm:text-4xl font-bold mt-4">
+        <h3 className="font-display text-2xl sm:text-4xl font-bold mt-4 leading-tight">
           Request your <span className="text-gradient-neon">custom figure</span>
         </h3>
-        <p className="text-sm text-muted-foreground mt-2">
+        <p className="text-xs sm:text-sm text-muted-foreground mt-2 max-w-xl">
           Fill the form — we'll continue the conversation directly on WhatsApp.
         </p>
 
-        <form onSubmit={submit} className="mt-6 grid sm:grid-cols-2 gap-4">
+        <form onSubmit={submit} className="mt-5 sm:mt-6 grid sm:grid-cols-2 gap-3 sm:gap-4">
           <Field label="Your Name" required value={form.name} onChange={(v) => setForm({ ...form, name: v })} placeholder="Hiro Tanaka" />
           <Field label="Anime Character" required value={form.character} onChange={(v) => setForm({ ...form, character: v })} placeholder="Gojo Satoru" />
           <Field label="Budget (INR)" required value={form.budget} onChange={(v) => setForm({ ...form, budget: v })} placeholder="₹30,000 – ₹50,000" />

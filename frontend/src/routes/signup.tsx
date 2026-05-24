@@ -75,13 +75,20 @@ function SignupPage() {
       // Backend sets JWT in httpOnly cookie automatically
       // Response format: { success, message, data: { user: {...} } }
       if (response?.data?.user) {
-        login(response.data.user);
+        if (response.data.accessToken) {
+          api.setAccessToken(response.data.accessToken);
+        }
+        login(response.data.user, response.data.accessToken);
         navigate({ to: "/" });
       } else {
         throw new Error("Invalid response from server");
       }
     } catch (err: any) {
-      const message = err.response?.data?.message || err.message || "Signup failed. Please try again.";
+      const status = err.response?.status;
+      const backendMessage = err.response?.data?.message || err.message;
+      const message = status === 409
+        ? "An account already exists with this email. Please log in instead."
+        : backendMessage || "Signup failed. Please try again.";
       setError(message);
     } finally {
       setLoading(false);
@@ -162,6 +169,13 @@ function SignupPage() {
               {error && (
                 <div className="text-sm bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-600 font-medium">
                   ⚠ {error}
+                  {error.includes("log in instead") && (
+                    <div className="mt-2">
+                      <Link to="/login" className="font-semibold text-foreground underline underline-offset-4">
+                        Go to login
+                      </Link>
+                    </div>
+                  )}
                 </div>
               )}
 

@@ -1,4 +1,6 @@
 // Frontend API Client
+import { ACCESS_TOKEN_KEY } from "./auth";
+
 function normalizeApiBaseUrl(rawBaseUrl: string | undefined): string {
     const fallbackBaseUrl = "http://localhost:5000/api";
     const baseUrl = rawBaseUrl?.trim() || fallbackBaseUrl;
@@ -21,6 +23,7 @@ const API_BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_URL);
 
 interface RequestOptions extends RequestInit {
     withCredentials?: boolean;
+    skipAuthRefresh?: boolean;
 }
 
 class ApiClient {
@@ -30,20 +33,81 @@ class ApiClient {
         this.baseUrl = baseUrl;
     }
 
+    private getAccessToken() {
+        try {
+            return localStorage.getItem(ACCESS_TOKEN_KEY) || "";
+        } catch {
+            return "";
+        }
+    }
+
+    public setAccessToken(token: string) {
+        try {
+            if (token) {
+                localStorage.setItem(ACCESS_TOKEN_KEY, token);
+            } else {
+                localStorage.removeItem(ACCESS_TOKEN_KEY);
+            }
+        } catch {
+            // ignore storage failures
+        }
+    }
+
+    public clearAccessToken() {
+        this.setAccessToken("");
+    }
+
+    private shouldAttemptAuthRefresh(endpoint: string, options: RequestOptions) {
+        if (options.skipAuthRefresh) return false;
+
+        return !endpoint.startsWith("/auth/login")
+            && !endpoint.startsWith("/auth/register")
+            && !endpoint.startsWith("/auth/admin/login")
+            && !endpoint.startsWith("/auth/refresh")
+            && !endpoint.startsWith("/auth/forgot-password")
+            && !endpoint.startsWith("/auth/reset-password");
+    }
+
+    private async refreshAccessToken() {
+        try {
+            const response: any = await this.request("/auth/refresh", {
+                method: "POST",
+                skipAuthRefresh: true,
+            });
+
+            const accessToken = response?.data?.accessToken;
+            if (accessToken) {
+                this.setAccessToken(accessToken);
+                return true;
+            }
+        } catch {
+            // fall through to the original error
+        }
+
+        return false;
+    }
+
     private async request<T>(
         endpoint: string,
         options: RequestOptions = {}
     ): Promise<T> {
         const url = `${this.baseUrl}${endpoint}`;
+        const authToken = this.getAccessToken();
+
+        const headers: HeadersInit = {
+            "Content-Type": "application/json",
+            ...options.headers,
+        };
+
+        if (authToken && !("Authorization" in headers)) {
+            headers["Authorization"] = `Bearer ${authToken}`;
+        }
 
         const response = await fetch(url, {
             ...options,
             cache: "no-store",
             credentials: "include",
-            headers: {
-                "Content-Type": "application/json",
-                ...options.headers,
-            },
+            headers,
         });
 
         const data = await response.json().catch(() => ({
@@ -51,6 +115,16 @@ class ApiClient {
         }));
 
         if (!response.ok) {
+            if (response.status === 401 && this.shouldAttemptAuthRefresh(endpoint, options)) {
+                const refreshed = await this.refreshAccessToken();
+                if (refreshed) {
+                    return this.request<T>(endpoint, {
+                        ...options,
+                        skipAuthRefresh: true,
+                    });
+                }
+            }
+
             const error = new Error(data.message || `HTTP ${response.status}`) as any;
             error.response = { status: response.status, data };
             throw error;
@@ -169,6 +243,7 @@ class ApiClient {
     }
 
     async logout() {
+        this.clearAccessToken();
         return this.request("/auth/logout", {
             method: "POST",
         });
