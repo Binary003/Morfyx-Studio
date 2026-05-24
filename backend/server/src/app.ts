@@ -61,16 +61,27 @@ app.use((req, res, next) => {
   next();
 });
 
+const healthPayload = { success: true, message: "API healthy" };
+
 app.get("/", (_req, res) => {
-  res.json({ success: true, message: "API healthy" });
+  res.json(healthPayload);
 });
 
-const routeGroups = [
-  ["/api", ""],
-  ["", ""]
-] as const;
+app.get("/health", (_req, res) => {
+  res.json(healthPayload);
+});
 
-for (const [prefix] of routeGroups) {
+app.get("/api", (_req, res) => {
+  res.json(healthPayload);
+});
+
+app.get("/api/health", (_req, res) => {
+  res.json(healthPayload);
+});
+
+const routePrefixes = ["/api", ""] as const;
+
+for (const prefix of routePrefixes) {
   app.use(`${prefix}/auth`, authRoutes);
   app.use(`${prefix}/products`, productRoutes);
   app.use(`${prefix}/categories`, categoryRoutes);
