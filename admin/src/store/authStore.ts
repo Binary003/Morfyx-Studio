@@ -3,6 +3,7 @@ import { adminApi } from "../lib/api";
 
 const STORAGE_KEY = "morfyx_admin_auth";
 const USER_KEY = "morfyx_admin_user";
+const ACCESS_TOKEN_KEY = "morfyx_admin_access_token";
 
 interface User {
     email: string;
@@ -48,6 +49,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
                     email: response.data.user.email,
                     name: response.data.user.name
                 };
+                if (response.data.accessToken) {
+                    adminApi.setAuthToken(response.data.accessToken);
+                    localStorage.setItem(ACCESS_TOKEN_KEY, response.data.accessToken);
+                }
                 localStorage.setItem(STORAGE_KEY, "true");
                 localStorage.setItem(USER_KEY, JSON.stringify(user));
                 set({
@@ -76,6 +81,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } finally {
             localStorage.removeItem(STORAGE_KEY);
             localStorage.removeItem(USER_KEY);
+            localStorage.removeItem(ACCESS_TOKEN_KEY);
+            adminApi.setAuthToken("");
             set({
                 isAuthenticated: false,
                 user: null,
@@ -93,6 +100,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         if (!auth || !user) {
             set({ isAuthenticated: false, user: null });
             return;
+        }
+
+        const storedAccessToken = localStorage.getItem(ACCESS_TOKEN_KEY);
+        if (storedAccessToken) {
+            adminApi.setAuthToken(storedAccessToken);
         }
 
         try {

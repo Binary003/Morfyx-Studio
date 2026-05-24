@@ -36,7 +36,7 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = signRefreshToken({ id: user.id, role: user.role });
   setAuthCookies(req, res, accessToken, refreshToken);
 
-  sendSuccess(res, { user }, "Registered successfully");
+  sendSuccess(res, { user, accessToken }, "Registered successfully");
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
@@ -46,7 +46,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
   const { user, accessToken, refreshToken } = await authenticateUser(email, password);
   setAuthCookies(req, res, accessToken, refreshToken);
 
-  sendSuccess(res, { user }, "Logged in");
+  sendSuccess(res, { user, accessToken }, "Logged in");
 });
 
 export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
@@ -57,7 +57,7 @@ export const adminLogin = asyncHandler(async (req: Request, res: Response) => {
   if (user.role !== "admin") throw new ApiError(403, "Admin access required");
 
   setAuthCookies(req, res, accessToken, refreshToken);
-  sendSuccess(res, { user }, "Admin logged in");
+  sendSuccess(res, { user, accessToken }, "Admin logged in");
 });
 
 export const refresh = asyncHandler(async (req: Request, res: Response) => {
@@ -69,7 +69,7 @@ export const refresh = asyncHandler(async (req: Request, res: Response) => {
   const refreshToken = signRefreshToken({ id: decoded.id, role: decoded.role });
 
   setAuthCookies(req, res, accessToken, refreshToken);
-  sendSuccess(res, {}, "Token refreshed");
+  sendSuccess(res, { accessToken }, "Token refreshed");
 });
 
 export const logout = asyncHandler(async (req: Request, res: Response) => {

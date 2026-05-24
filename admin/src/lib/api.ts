@@ -27,9 +27,18 @@ interface RequestOptions extends RequestInit {
 
 class AdminApiClient {
     private baseUrl: string;
+    private authTokenKey = "morfyx_admin_access_token";
 
     constructor(baseUrl: string) {
         this.baseUrl = baseUrl;
+    }
+
+    private getAuthToken() {
+        try {
+            return localStorage.getItem(this.authTokenKey) || "";
+        } catch {
+            return "";
+        }
     }
 
     private async request<T>(
@@ -45,6 +54,11 @@ class AdminApiClient {
 
         // Set up headers
         const headers: HeadersInit = {};
+        const authToken = this.getAuthToken();
+
+        if (authToken) {
+            headers["Authorization"] = `Bearer ${authToken}`;
+        }
 
         // Only set Content-Type for non-FormData requests
         if (!(options.body instanceof FormData)) {
@@ -86,7 +100,20 @@ class AdminApiClient {
         return response;
     }
 
+    setAuthToken(token: string) {
+        try {
+            if (token) {
+                localStorage.setItem(this.authTokenKey, token);
+            } else {
+                localStorage.removeItem(this.authTokenKey);
+            }
+        } catch {
+            // ignore storage failures
+        }
+    }
+
     async logout() {
+        this.setAuthToken("");
         return this.request("/auth/logout", {
             method: "POST",
         });
