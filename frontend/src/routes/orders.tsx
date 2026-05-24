@@ -226,12 +226,12 @@ function OrdersPage() {
             </div>
           ) : (
             <div className="glass neon-border rounded-3xl p-6 sm:p-8">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between mb-6">
-                <div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between mb-6">
+                <div className="min-w-0">
                   <div className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Signed in as</div>
-                  <div className="text-lg font-semibold mt-1">{user?.name}</div>
+                  <div className="text-lg font-semibold mt-1 break-words">{user?.name}</div>
                 </div>
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground sm:text-right">
                   Showing {orders.length} of {pagination.total} orders
                 </div>
               </div>
@@ -250,14 +250,14 @@ function OrdersPage() {
                         <div className="mt-1 font-mono text-xs sm:text-sm font-semibold leading-5 break-all text-white/90">
                           {order.orderNumber || order._id}
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground">
+                        <div className="mt-3 grid gap-2 text-sm text-muted-foreground sm:flex sm:flex-wrap sm:gap-4">
                           <span>{order.orderedProducts?.length || 0} item{(order.orderedProducts?.length || 0) === 1 ? "" : "s"}</span>
                           <span>{new Date(order.createdAt).toLocaleDateString()}</span>
                           <span>₹{(order.totalAmount || 0).toLocaleString('en-IN')}</span>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-3 gap-3 lg:min-w-[260px]">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[260px]">
                         <div className="rounded-xl border border-white/10 bg-black/10 p-3">
                           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Payment</div>
                           <div className={`mt-1 inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getPaymentBadgeClass(order.paymentInfo?.status)}`}>
@@ -282,7 +282,7 @@ function OrdersPage() {
                         <div className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Items</div>
                         <div className="grid gap-2 sm:grid-cols-2">
                           {order.orderedProducts.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm gap-3">
+                            <div key={idx} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/10 px-3 py-2 text-sm gap-3 min-w-0">
                               <span className="min-w-0 flex-1 truncate text-muted-foreground">{item?.name || `Product (${item?.quantity || 1}x)`}</span>
                               <span className="shrink-0 text-white/90">x{item?.quantity || 1}</span>
                             </div>

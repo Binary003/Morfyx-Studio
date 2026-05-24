@@ -254,7 +254,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="lg:hidden mt-2 glass rounded-2xl p-4 flex flex-col gap-2"
+              className="lg:hidden mt-2 rounded-2xl border border-border/70 bg-background/98 p-4 shadow-2xl backdrop-blur-xl flex flex-col gap-2"
             >
               <MobileLinks
                 onNavigate={() => setOpen(false)}
