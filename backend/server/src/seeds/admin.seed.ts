@@ -7,9 +7,10 @@ async function seedAdminUser() {
         await connect(env.mongodbUri);
         console.log("Connected to MongoDB");
 
-        // Check if admin already exists
-        const existingAdmin = await User.findOne({ email: "admin@morfyx.com", role: "admin" });
+        // Check if the admin email already exists, even if it was created with a different role.
+        const existingAdmin = await User.findOne({ email: "admin@morfyx.com" });
         if (existingAdmin) {
+            existingAdmin.role = "admin";
             existingAdmin.password = "Shivam@morfyx65";
             await existingAdmin.save();
             console.log("✅ Admin user already exists");
