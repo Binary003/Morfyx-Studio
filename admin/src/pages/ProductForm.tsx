@@ -411,11 +411,11 @@ export function ProductFormPage() {
                                     }
 
                                     return (
-                                <img
-                                    src={previewSrc}
-                                    alt={form.name || "Preview"}
-                                    className="h-full w-full object-cover"
-                                />
+                                        <img
+                                            src={previewSrc}
+                                            alt={form.name || "Preview"}
+                                            className="h-full w-full object-cover"
+                                        />
                                     );
                                 })()
                             ) : (
