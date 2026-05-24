@@ -37,8 +37,8 @@ All variables are **required** in production:
 - `CLOUDINARY_*` - Cloudinary API credentials
 - `RAZORPAY_*` - Razorpay payment credentials
 - `SHIPMOZO_API_KEY` - Shipment API key
-- `EMAIL_USER` - SMTP email
-- `EMAIL_PASS` - SMTP password
+- `EMAIL_API_KEY` - Resend API key
+- `EMAIL_FROM` - Verified sender address for transactional mail
 - `COOKIE_DOMAIN` - Production domain for cookies
 
 ## API Endpoints
@@ -142,4 +142,5 @@ Expected response:
 - Cookie domain should match your frontend domain in production
 - FRONTEND_URL must be exact - includes protocol and port if needed
 - All payment and email credentials must be valid for those services to work
+- Email delivery uses Resend in production
 

@@ -17,8 +17,7 @@ const requiredVars = [
     "CLOUDINARY_SECRET",
     "RAZORPAY_KEY_ID",
     "RAZORPAY_KEY_SECRET",
-    "EMAIL_USER",
-    "EMAIL_PASS"
+    "EMAIL_API_KEY"
   ] : [])
 ];
 
@@ -49,10 +48,8 @@ export const env = {
   razorpayKeySecret: process.env.RAZORPAY_KEY_SECRET as string,
   // Payment Configuration
   advancePaymentPercent: Number(process.env.ADVANCE_PAYMENT_PERCENT || 30),
-  emailService: process.env.EMAIL_SERVICE || "gmail",
+  emailService: process.env.EMAIL_SERVICE || "resend",
   emailApiKey: process.env.EMAIL_API_KEY,
-  emailUser: process.env.EMAIL_USER as string,
-  emailPass: process.env.EMAIL_PASS as string,
   emailFrom: process.env.EMAIL_FROM || "orders@morfyxstudio.com",
   adminEmail: process.env.ADMIN_EMAIL || "admin@morfyx.com",
   frontendUrls,

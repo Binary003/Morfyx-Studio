@@ -14,7 +14,7 @@ Complete this checklist before deploying to production.
   - [ ] Cloudinary
   - [ ] Razorpay
   - [ ] Shipmozo
-  - [ ] Email SMTP
+  - [ ] Resend email API key and verified sender
 
 ## Security
 - [ ] `.env` file is NOT committed to git
