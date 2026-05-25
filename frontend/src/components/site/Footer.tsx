@@ -1,4 +1,5 @@
-import { Instagram, Twitter, Youtube, Send, MessageCircle } from "lucide-react";
+import { Instagram, MessageCircle, Youtube, Send } from "lucide-react";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 const cols = [
   { t: "Shop", links: ["New Arrivals", "Bestsellers", "Limited Editions", "Imported Collection"] },
@@ -6,6 +7,8 @@ const cols = [
   { t: "Support", links: ["Shipping", "Returns", "FAQ", "Contact"] },
   { t: "Collectors", links: ["Custom Figures", "Membership", "Authenticity"] },
 ];
+
+const whatsappNumber = import.meta.env.VITE_WHATSAPP_NUMBER || "9696881479";
 
 export function Footer() {
   return (
@@ -49,11 +52,15 @@ export function Footer() {
               Premium anime figures and custom 3D collectibles crafted in India — shipped across the country from our single studio.
             </p>
             <div className="flex gap-2 mt-6">
-              {[Instagram, Twitter, Youtube, MessageCircle].map((Icon, i) => (
-                <a key={i} href="#" className="h-9 w-9 rounded-lg glass grid place-items-center hover:glow-cyan transition">
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+              <a href="https://www.instagram.com/morfyxstudio?igsh=MWVmdmc2ZGtlYWV1MQ==" target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded-lg glass grid place-items-center hover:glow-cyan transition">
+                <Instagram className="h-4 w-4" />
+              </a>
+              <a href={buildWhatsAppUrl(whatsappNumber)} target="_blank" rel="noopener noreferrer" className="h-9 w-9 rounded-lg glass grid place-items-center hover:glow-cyan transition">
+                <MessageCircle className="h-4 w-4" />
+              </a>
+              <a href="#" className="h-9 w-9 rounded-lg glass grid place-items-center hover:glow-cyan transition">
+                <Youtube className="h-4 w-4" />
+              </a>
             </div>
           </div>
           {cols.map((c) => (
