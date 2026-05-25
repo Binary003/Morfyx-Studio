@@ -1,21 +1,26 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
+import { toast } from "sonner";
 import { SectionHead } from "./Collections";
-import p1 from "@/assets/prod-1.jpg";
-import p2 from "@/assets/prod-2.jpg";
-import p3 from "@/assets/prod-3.jpg";
-import p4 from "@/assets/prod-4.jpg";
-
-const slides = [
-  { name: "Kurogane Samurai", tag: "Bestseller", price: 289, img: p1, desc: "1/6 scale resin masterpiece, hand-painted." },
-  { name: "Mecha Ascension Mk.II", tag: "Just Dropped", price: 459, img: p2, desc: "Articulated alloy frame with LED core." },
-  { name: "Shadow Ninja", tag: "Limited", price: 219, img: p3, desc: "Translucent resin, edition of 200." },
-  { name: "Neon Dragon", tag: "Collector's Pick", price: 379, img: p4, desc: "Iridescent paintwork, mounted base." },
-];
+import { useAllProducts, formatPrice, type Product } from "@/lib/products";
+import { useCart } from "@/lib/cart";
 
 export function FeaturedCarousel() {
+  const { addItem } = useCart();
+  const { data: products } = useAllProducts();
   const [i, setI] = useState(0);
+
+  // Get top 3 products by price
+  const slides = useMemo(() => {
+    if (!products || products.length === 0) return [];
+    return [...products]
+      .sort((a, b) => (b.price || 0) - (a.price || 0))
+      .slice(0, 3);
+  }, [products]);
+
+  if (slides.length === 0) return null;
+
   const next = () => setI((i + 1) % slides.length);
   const prev = () => setI((i - 1 + slides.length) % slides.length);
   const s = slides[i];
@@ -42,17 +47,28 @@ export function FeaturedCarousel() {
               </div>
               <div className="p-8 sm:p-12 flex flex-col justify-center gap-5">
                 <div className="inline-flex w-fit items-center gap-2 glass rounded-full px-3 py-1 text-[10px] uppercase tracking-[0.3em] text-accent">
-                  {s.tag}
+                  Featured Drop
                 </div>
                 <h3 className="font-display text-4xl sm:text-5xl font-bold">{s.name}</h3>
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: 5 }).map((_, j) => <Star key={j} className="h-4 w-4 fill-accent text-accent" />)}
+                  {Array.from({ length: Math.round(s.rating || 5) }).map((_, j) => <Star key={j} className="h-4 w-4 fill-accent text-accent" />)}
                 </div>
-                <p className="text-muted-foreground">{s.desc}</p>
+                <div className={s.stock !== undefined && s.stock > 0 ? "text-green-400" : "text-destructive"}>
+                  {s.stock !== undefined && s.stock > 0 ? `In Stock (${s.stock})` : "Out of Stock"}
+                </div>
+                <p className="text-muted-foreground">{s.description || "Premium collector-grade figure"}</p>
                 <div className="flex items-center gap-4 mt-2">
-                  <div className="font-display text-4xl font-bold text-gradient-neon">₹{s.price}</div>
-                  <button className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
-                    Shop Now
+                  <div className="font-display text-4xl font-bold text-gradient-neon">{formatPrice(s.price)}</div>
+                  <button 
+                    onClick={() => {
+                      const added = addItem(s);
+                      if (added) {
+                        toast.success(`${s.name} added to cart.`, { duration: 1400 });
+                      }
+                    }}
+                    className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
+                  >
+                    Add to Cart
                   </button>
                 </div>
               </div>

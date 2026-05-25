@@ -8,10 +8,10 @@ import { WhyUs } from "@/components/site/WhyUs";
 export const Route = createFileRoute("/imported")({
   head: () => ({
     meta: [
-      { title: "Imported Anime Figures — Morfyx Studio" },
-      { name: "description", content: "Authentic anime figures imported from official studios, curated and verified in India." },
-      { property: "og:title", content: "Imported Collection — Morfyx Studio" },
-      { property: "og:description", content: "Authentic anime figures imported from official studios and verified in India." },
+      { title: "Premium Collection — Morfyx Studio" },
+      { name: "description", content: "Premium anime figures curated and verified in India for collectors." },
+      { property: "og:title", content: "Premium Collection — Morfyx Studio" },
+      { property: "og:description", content: "Premium anime figures curated and verified in India for collectors." },
     ],
   }),
   component: ImportedPage,
@@ -20,12 +20,12 @@ export const Route = createFileRoute("/imported")({
 function ImportedPage() {
   return (
     <PageShell>
-      <PageHero eyebrow="Imported · India Curated" title="Authentic imported figures" desc="Officially licensed pieces, sealed, certified, and shipped across India." />
+      <PageHero eyebrow="Premium · India Curated" title="Authentic premium figures" desc="Officially licensed pieces, sealed, certified, and shipped across India." />
       <ImportedCollection />
       <ProductsSection
-        eyebrow="Imported Vault"
-        title="Exclusive imported releases"
-        desc="Curated imports from official studios. Tap any figure for full details."
+        eyebrow="Premium Vault"
+        title="Exclusive premium releases"
+        desc="Curated figures from official studios. Tap any figure for full details."
         productType="imported"
       />
       <FeaturedCarousel />

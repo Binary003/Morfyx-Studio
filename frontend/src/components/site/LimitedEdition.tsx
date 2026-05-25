@@ -1,17 +1,32 @@
+import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Crown, Timer } from "lucide-react";
+import { toast } from "sonner";
 import { SectionHead } from "./Collections";
-import p1 from "@/assets/prod-1.jpg";
-import p2 from "@/assets/prod-3.jpg";
-import p3 from "@/assets/prod-4.jpg";
-
-const drops = [
-  { name: "Sukuna — Crimson Throne", edition: "120 / 250", price: 689, img: p1 },
-  { name: "Zero Two — Stigma Edition", edition: "045 / 150", price: 549, img: p2 },
-  { name: "Madara — Eternal Mangekyō", edition: "088 / 200", price: 729, img: p3 },
-];
+import { formatPrice, useAllProducts, type Product } from "@/lib/products";
+import { useCart } from "@/lib/cart";
 
 export function LimitedEdition() {
+  const { addItem } = useCart();
+  const { data: products } = useAllProducts();
+
+  const drops = useMemo(() => {
+    return [...products]
+      .sort((left, right) => (right.price || 0) - (left.price || 0))
+      .slice(0, 3);
+  }, [products]);
+
+  const handleReserve = (product: Product) => {
+    const added = addItem(product);
+    if (added) {
+      toast.success(`${product.name} reserved in cart.`, { duration: 1400 });
+    }
+  };
+
+  if (drops.length === 0) {
+    return null;
+  }
+
   return (
     <section id="limited" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -37,11 +52,15 @@ export function LimitedEdition() {
                 </span>
               </div>
               <div className="absolute bottom-0 inset-x-0 p-6">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-accent">Edition {d.edition}</div>
+                <div className="text-[10px] uppercase tracking-[0.3em] text-accent">Top priced pick</div>
                 <h3 className="font-display text-2xl font-bold mt-2">{d.name}</h3>
                 <div className="flex items-end justify-between mt-4">
-                  <div className="font-display text-3xl font-bold text-gradient-neon">₹{d.price}</div>
-                  <button className="rounded-full bg-[var(--gradient-neon)] px-5 py-2.5 text-sm font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
+                  <div className="font-display text-3xl font-bold text-gradient-neon">{formatPrice(d.price)}</div>
+                  <button
+                    type="button"
+                    onClick={() => handleReserve(d)}
+                    className="rounded-full bg-[var(--gradient-neon)] px-5 py-2.5 text-sm font-semibold text-primary-foreground glow-pink hover:scale-105 transition"
+                  >
                     Reserve
                   </button>
                 </div>

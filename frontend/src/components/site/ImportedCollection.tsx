@@ -1,20 +1,46 @@
 import { motion } from "framer-motion";
-import { Plane, ShieldCheck, Award } from "lucide-react";
+import { Sparkles, ShieldCheck, Award } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { SectionHead } from "./Collections";
-import p1 from "@/assets/prod-2.jpg";
+import { useAllProducts } from "@/lib/products";
+import { toast } from "sonner";
+import { useCart } from "@/lib/cart";
 import p2 from "@/assets/prod-4.jpg";
 
 const features = [
-  { icon: Plane, t: "Direct from Japan", d: "Sourced straight from Tokyo & Osaka studios." },
-  { icon: ShieldCheck, t: "100% Authentic", d: "Certificate of authenticity with every piece." },
-  { icon: Award, t: "Studio Grade", d: "Bandai, Good Smile, Aniplex & boutique sculptors." },
+  { icon: Sparkles, t: "Premium Craftsmanship", d: "Handpicked premium figures from master craftsmen." },
+  { icon: ShieldCheck, t: "100% Authentic", d: "Certificate of authenticity with every premium piece." },
+  { icon: Award, t: "Collector Grade", d: "Limited edition and exclusive studio-grade figures." },
 ];
 
 export function ImportedCollection() {
+  const { data: products } = useAllProducts();
+  const { addItem } = useCart();
+  const [topProduct, setTopProduct] = useState<any>(null);
+
+  useEffect(() => {
+    if (products && products.length > 0) {
+      const highest = products.reduce((max, product) => 
+        (product.price > max.price) ? product : max
+      );
+      setTopProduct(highest);
+    }
+  }, [products]);
+
+  const handleAddToCart = () => {
+    if (topProduct) {
+      const added = addItem(topProduct);
+      if (added) {
+        toast.success(`${topProduct.name} added to cart.`, { duration: 1400 });
+      }
+    }
+  };
+
   return (
     <section id="imported" className="relative py-24 sm:py-32">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <SectionHead eyebrow="Imported Collection" title="Authentic figures, flown in from Japan" desc="Hand-selected pieces from official Japanese studios — verified, sealed, and shipped to your door." />
+        <SectionHead eyebrow="Premium Collection" title="Collector's showcase — Premium Edition" desc="Handcrafted premium figures, available exclusively in India. Each piece is a masterwork." />
 
         <div className="mt-16 grid lg:grid-cols-[1.2fr_1fr] gap-8 items-stretch">
           <motion.div
@@ -22,22 +48,35 @@ export function ImportedCollection() {
             transition={{ duration: 0.7 }}
             className="relative rounded-3xl overflow-hidden glass neon-border min-h-[500px]"
           >
-            <img src={p1} alt="Imported anime figure" className="absolute inset-0 w-full h-full object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-            <div className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-[var(--gradient-neon)] text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 glow-pink">
-              🇯🇵 Imported · Tokyo
-            </div>
-            <div className="absolute bottom-0 inset-x-0 p-8">
-              <div className="text-[10px] uppercase tracking-[0.3em] text-accent">Featured Import</div>
-              <h3 className="font-display text-3xl sm:text-4xl font-bold mt-2">Rem — Wedding Ver. 1/7 Scale</h3>
-              <p className="text-muted-foreground mt-2 max-w-md">Officially licensed by Good Smile Company. Sealed in original packaging.</p>
-              <div className="mt-5 flex items-end justify-between gap-4">
-                <div className="font-display text-3xl font-bold text-gradient-neon">₹429</div>
-                <button className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition">
-                  Add to Cart
-                </button>
-              </div>
-            </div>
+            {topProduct && (
+              <>
+                <img src={topProduct.img} alt={topProduct.name} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+                <div className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-[var(--gradient-neon)] text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 glow-pink">
+                  ⭐ Premium · India
+                </div>
+                <div className="absolute bottom-0 inset-x-0 p-8">
+                  <div className="text-[10px] uppercase tracking-[0.3em] text-accent">{topProduct.category}</div>
+                  <h3 className="font-display text-3xl sm:text-4xl font-bold mt-2">{topProduct.name}</h3>
+                  <p className="text-muted-foreground mt-2 max-w-md">{topProduct.description}</p>
+                  <div className="mt-5 flex items-center gap-3">
+                    <span className={topProduct.stock !== undefined && topProduct.stock > 0 ? "text-green-400 text-xs font-semibold" : "text-destructive text-xs font-semibold"}>
+                      {topProduct.stock !== undefined && topProduct.stock > 0 ? `In Stock (${topProduct.stock})` : "Out of Stock"}
+                    </span>
+                  </div>
+                  <div className="mt-4 flex items-end justify-between gap-4">
+                    <div className="font-display text-3xl font-bold text-gradient-neon">₹{topProduct.price}</div>
+                    <button 
+                      onClick={handleAddToCart}
+                      disabled={topProduct.stock !== undefined && topProduct.stock <= 0}
+                      className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
           </motion.div>
 
           <div className="flex flex-col gap-5">
@@ -61,12 +100,12 @@ export function ImportedCollection() {
               initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="relative rounded-2xl overflow-hidden flex-1 min-h-[200px] glass neon-border"
             >
-              <img src={p2} alt="Import" className="absolute inset-0 w-full h-full object-cover opacity-60" />
+              <img src={p2} alt="Premium Collection" className="absolute inset-0 w-full h-full object-cover opacity-60" />
               <div className="absolute inset-0 bg-gradient-to-t from-background to-transparent" />
-              <div className="absolute bottom-0 inset-x-0 p-6">
-                <div className="text-[10px] uppercase tracking-[0.3em] text-accent">200+ imports in stock</div>
-                <div className="font-display text-2xl font-bold mt-1">Browse Imports →</div>
-              </div>
+              <Link to="/imported" className="absolute bottom-0 inset-x-0 p-6 hover:brightness-110 transition">
+                <div className="text-[10px] uppercase tracking-[0.3em] text-accent">Exclusive collection</div>
+                <div className="font-display text-2xl font-bold mt-1">Browse Premiums →</div>
+              </Link>
             </motion.div>
           </div>
         </div>
