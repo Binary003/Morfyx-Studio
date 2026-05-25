@@ -113,6 +113,7 @@ export const getAllOrders = async () => {
     itemCount: order.orderedProducts?.length || 0,
     shipmentId: order.shipmentId,
     trackingId: order.trackingId,
+    deliveryDays: order.deliveryDays,
     shipmentStatus: order.shipmentStatus,
     shippingInfo: {
       name: order.shippingInfo?.name,
@@ -132,7 +133,8 @@ export const updateOrderStatus = async (
   id: string,
   status?: string,
   trackingId?: string,
-  shipmentStatus?: string
+  shipmentStatus?: string,
+  deliveryDays?: number
 ) => {
   const order = await Order.findById(id);
   if (!order) throw new ApiError(404, "Order not found");
@@ -145,7 +147,7 @@ export const updateOrderStatus = async (
     throw new ApiError(400, "Payment must be verified before shipment updates");
   }
 
-  const update: Record<string, string> = {};
+  const update: Record<string, unknown> = {};
 
   if (status !== undefined) {
     update.orderStatus = status;
@@ -157,6 +159,10 @@ export const updateOrderStatus = async (
 
   if (shipmentStatus !== undefined) {
     update.shipmentStatus = shipmentStatus;
+  }
+
+  if (deliveryDays !== undefined) {
+    update.deliveryDays = deliveryDays;
   }
 
   if (Object.keys(update).length === 0) {

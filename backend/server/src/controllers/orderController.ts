@@ -77,7 +77,8 @@ export const updateStatus = asyncHandler(async (req: Request, res: Response) => 
     req.params.id,
     req.body.status,
     req.body.trackingId,
-    req.body.shipmentStatus
+    req.body.shipmentStatus,
+    req.body.deliveryDays
   );
   sendSuccess(res, { order }, "Order updated");
 });

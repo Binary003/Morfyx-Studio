@@ -21,6 +21,7 @@ interface Order {
     remainingCOD?: number;
     shipmentStatus?: string;
     trackingId?: string;
+    deliveryDays?: number;
     itemCount?: number;
     createdAt: string;
     shippingInfo?: {
@@ -137,7 +138,7 @@ export function OrdersPage() {
         }
     };
 
-    const updateShipmentDetails = async (orderId: string, shipmentStatus?: string, trackingId?: string) => {
+    const updateShipmentDetails = async (orderId: string, shipmentStatus?: string, trackingId?: string, deliveryDays?: number) => {
         try {
             setShipmentSaveState((prev) => ({ ...prev, [orderId]: "saving" }));
             const currentOrder = orders.find((order) => order._id === orderId);
@@ -145,6 +146,7 @@ export function OrdersPage() {
                 status: currentOrder?.orderStatus,
                 shipmentStatus,
                 trackingId,
+                deliveryDays,
             });
             const updated = (res as any)?.data?.order || (res as any)?.order || res;
             setOrders((prev) => prev.map((o) => o._id === orderId ? {
@@ -152,6 +154,7 @@ export function OrdersPage() {
                 orderStatus: updated?.orderStatus || o.orderStatus,
                 shipmentStatus: updated?.shipmentStatus || shipmentStatus || o.shipmentStatus,
                 trackingId: updated?.trackingId || trackingId || o.trackingId,
+                deliveryDays: typeof updated?.deliveryDays === "number" ? updated.deliveryDays : deliveryDays ?? o.deliveryDays,
             } : o));
             setShipmentSaveState((prev) => ({ ...prev, [orderId]: "saved" }));
             window.setTimeout(() => {
@@ -304,10 +307,25 @@ export function OrdersPage() {
                                                     <option value="delivered">Delivered</option>
                                                     <option value="cancelled">Cancelled</option>
                                                 </Select>
+                                                <div>
+                                                    <Input
+                                                        type="number"
+                                                        min="1"
+                                                        placeholder="Delivery days"
+                                                        value={order.deliveryDays ?? ""}
+                                                        onChange={(event) =>
+                                                            setOrders((prev) => prev.map((o) => o._id === order._id ? {
+                                                                ...o,
+                                                                deliveryDays: event.target.value === "" ? undefined : Number(event.target.value),
+                                                            } : o))
+                                                        }
+                                                    />
+                                                    <div className="mt-1 text-[11px] text-gray-500">Shown to the customer as shipment in X days.</div>
+                                                </div>
                                                 <button
                                                     type="button"
                                                     className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:bg-white/15 hover:border-white/25 disabled:cursor-not-allowed disabled:opacity-60"
-                                                    onClick={() => updateShipmentDetails(order._id, order.shipmentStatus, order.trackingId)}
+                                                    onClick={() => updateShipmentDetails(order._id, order.shipmentStatus, order.trackingId, order.deliveryDays)}
                                                     disabled={shipmentSaveState[order._id] === "saving"}
                                                 >
                                                     {shipmentSaveState[order._id] === "saving"

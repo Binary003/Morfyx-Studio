@@ -22,6 +22,7 @@ export interface OrderDocument extends Document {
     signature?: string;
     status: "pending" | "paid" | "failed";
     advancePaid: boolean;
+    paymentFor?: "advance" | "full";
   };
   shippingInfo: {
     name: string;
@@ -37,6 +38,7 @@ export interface OrderDocument extends Document {
   };
   orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
   shipmentStatus?: "not_created" | "pending" | "picked" | "shipped" | "delivered" | "cancelled";
+  deliveryDays?: number;
   trackingId?: string;
   shiprocketOrderId?: string;
   shipmentId?: string;
@@ -77,7 +79,8 @@ const orderSchema = new Schema<OrderDocument>(
       paymentId: { type: String },
       signature: { type: String },
       status: { type: String, enum: ["pending", "paid", "failed"], default: "pending" },
-      advancePaid: { type: Boolean, default: false }
+      advancePaid: { type: Boolean, default: false },
+      paymentFor: { type: String, enum: ["advance", "full"], default: "advance" }
     },
     shippingInfo: {
       name: { type: String, required: true },
@@ -101,6 +104,7 @@ const orderSchema = new Schema<OrderDocument>(
       enum: ["not_created", "pending", "picked", "shipped", "delivered", "cancelled"],
       default: "not_created"
     },
+    deliveryDays: { type: Number },
     trackingId: { type: String },
     shiprocketOrderId: { type: String },
     shipmentId: { type: String },

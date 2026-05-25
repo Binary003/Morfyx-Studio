@@ -267,7 +267,7 @@ class ApiClient {
     }
 
     // Payments
-    async createRazorpayOrder(data: { orderId: string; amount: number }) {
+    async createRazorpayOrder(data: { orderId: string; amount: number; paymentType?: 'advance' | 'full' }) {
         return this.request("/payments/razorpay/order", {
             method: "POST",
             body: JSON.stringify(data),

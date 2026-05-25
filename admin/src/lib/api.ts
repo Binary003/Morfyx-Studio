@@ -266,7 +266,7 @@ class AdminApiClient {
         return this.request<any>(`/orders/${id}`);
     }
 
-    async updateOrder(id: string, data: { status?: string; trackingId?: string; shipmentStatus?: string }) {
+    async updateOrder(id: string, data: { status?: string; trackingId?: string; shipmentStatus?: string; deliveryDays?: number }) {
         return this.request(`/orders/${id}/status`, {
             method: "PUT",
             body: JSON.stringify(data),

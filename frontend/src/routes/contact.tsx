@@ -100,7 +100,7 @@ function ContactPage() {
             {[
               { icon: Mail, t: "Email", d: "morfyxstudio@gmail.com" },
               { icon: MessageCircle, t: "WhatsApp", d: "+91 9696881479 ", href: whatsappUrl },
-              { icon: MapPin, t: "Studio", d: "India · Single studio" },
+              { icon: MapPin, t: "Studio", d: "Lucknow, Uttar Pradesh, India" },
             ].map((c) => (
               <a
                 key={c.t}

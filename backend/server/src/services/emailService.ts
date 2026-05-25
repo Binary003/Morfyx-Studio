@@ -134,6 +134,66 @@ export const templates = {
       `;
     })()}
   `,
+  paymentConfirmationFull: (order: OrderDocument) => `
+    ${(() => {
+      const totalFromItems = (order.orderedProducts || []).reduce((s, p) => s + (p.price || 0) * (p.quantity || 0), 0);
+      const total = (order.totalAmount || totalFromItems || 0);
+      const advance = (typeof order.advanceAmount === 'number' ? order.advanceAmount : total);
+
+      return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #2563eb;">💰 Full Payment Received</h2>
+      
+      <p>Hi <strong>${order.shippingInfo?.name || 'Customer'}</strong>,</p>
+      
+      <p>Thank you for your payment! Your order is now fully paid and is being processed for shipment.</p>
+      
+      <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #1e40af;">Order Details</h3>
+        <p><strong>Order ID:</strong> ${order._id}</p>
+        <p><strong>Order Date:</strong> ${order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ''}</p>
+      </div>
+      
+      <h3 style="color: #1e40af;">Products Ordered:</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Product</th>
+          <th style="text-align: center; padding: 10px;">Qty</th>
+          <th style="text-align: right; padding: 10px;">Price</th>
+          <th style="text-align: right; padding: 10px;">Total</th>
+        </tr>
+        ${(order.orderedProducts || []).map(p => `
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 10px;">${p.name}</td>
+            <td style="text-align: center; padding: 10px;">${p.quantity}</td>
+            <td style="text-align: right; padding: 10px;">₹${p.price}</td>
+            <td style="text-align: right; padding: 10px; font-weight: bold;">₹${(p.price || 0) * (p.quantity || 0)}</td>
+          </tr>
+        `).join('')}
+      </table>
+      
+      <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #166534;">Payment Breakdown</h3>
+        <p><strong style="color: #10b981;">✓ Full Payment Received:</strong> ₹${advance}</p>
+        <p style="margin-top: 10px; font-weight: bold; border-top: 1px solid #86efac; padding-top: 10px;">Total: ₹${total}</p>
+      </div>
+      
+      <h3 style="color: #1e40af;">Delivery Address:</h3>
+      <div style="background: #f9fafb; border: 1px solid #e5e7eb; padding: 12px; border-radius: 4px;">
+        <p><strong>${order.shippingInfo?.name || ''}</strong></p>
+        <p>${order.shippingInfo?.address || ''}</p>
+        <p>${order.shippingInfo?.city || ''}, ${order.shippingInfo?.state || ''} ${order.shippingInfo?.postalCode || ''}</p>
+        <p>${order.shippingInfo?.country || ''}</p>
+        <p><strong>Phone:</strong> ${order.shippingInfo?.phone || ''}</p>
+      </div>
+      
+      <p style="margin-top: 20px; font-size: 12px; color: #666;">Your shipment will be prepared and dispatched soon. You will receive tracking details once the package is shipped.</p>
+      
+      <p style="margin-top: 20px;">Best regards,<br><strong>Morfyx Studio</strong></p>
+    </div>
+      `;
+    })()}
+  `,
   shipmentTracking: (order: OrderDocument, trackingId: string) => `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
       <h2 style="color: #2563eb;">📦 Your Order is On The Way!</h2>
@@ -231,6 +291,48 @@ export const templates = {
       </div>
       
       <p style="margin-top: 20px;">The Shiprocket shipment has been automatically created. Please proceed with packing and preparing for pickup.</p>
+      
+      <p style="margin-top: 20px;"><a href="https://admin.morfyxstudio.com/orders?orderId=${order._id}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Open Order in Admin Portal</a></p>
+    </div>
+  `
+  ,
+  adminPaymentNotificationFull: (order: OrderDocument) => `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+      <h2 style="color: #2563eb;">💰 Full Payment Received & Ready to Ship</h2>
+      
+      <div style="background: #f0fdf4; border-left: 4px solid #10b981; padding: 12px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #166534;">Order Summary</h3>
+        <p><strong>Order ID:</strong> ${order._id}</p>
+        <p><strong>Customer:</strong> ${order.shippingInfo.name}</p>
+        <p><strong>Email:</strong> ${(order.user as any)?.email || 'N/A'}</p>
+        <p><strong>Phone:</strong> ${order.shippingInfo.phone}</p>
+      </div>
+      
+      <h3 style="color: #1e40af;">Products to Ship:</h3>
+      <table style="width: 100%; border-collapse: collapse;">
+        <tr style="background: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
+          <th style="text-align: left; padding: 10px;">Product</th>
+          <th style="text-align: center; padding: 10px;">Qty</th>
+          <th style="text-align: right; padding: 10px;">Price</th>
+          <th style="text-align: right; padding: 10px;">Total</th>
+        </tr>
+        ${order.orderedProducts.map(p => `
+          <tr style="border-bottom: 1px solid #e5e7eb;">
+            <td style="padding: 10px;">${p.name}</td>
+            <td style="text-align: center; padding: 10px;">${p.quantity}</td>
+            <td style="text-align: right; padding: 10px;">₹${p.price}</td>
+            <td style="text-align: right; padding: 10px; font-weight: bold;">₹${p.price * p.quantity}</td>
+          </tr>
+        `).join('')}
+      </table>
+      
+      <div style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 12px; margin: 20px 0;">
+        <h3 style="margin-top: 0; color: #1e40af;">Payment Status</h3>
+        <p><strong style="color: #10b981;">✓ Full Paid:</strong> ₹${order.advanceAmount}</p>
+        <p style="font-weight: bold; border-top: 1px solid #dbeafe; padding-top: 10px; margin-top: 10px;">Total: ₹${order.totalAmount}</p>
+      </div>
+      
+      <p style="margin-top: 20px;">Please proceed with packing and preparing for pickup.</p>
       
       <p style="margin-top: 20px;"><a href="https://admin.morfyxstudio.com/orders?orderId=${order._id}" style="background: #2563eb; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px;">Open Order in Admin Portal</a></p>
     </div>

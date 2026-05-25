@@ -29,6 +29,7 @@ function CheckoutPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [orderCreated, setOrderCreated] = useState(false);
+    const [payFull, setPayFull] = useState(false);
 
     const [formData, setFormData] = useState({
         name: user?.name || "",
@@ -55,9 +56,11 @@ function CheckoutPage() {
     const tax = 0; // removed tax calculation
     const total = subtotal;
 
-    // Payment breakdown: 30% advance now, 70% COD later
-    const advanceAmount = Math.round(total * 0.30);
-    const codAmount = total - advanceAmount;
+    // Payment breakdown: 30% advance now, 70% COD later (optionally pay full now)
+    const advanceAmount = Math.round(total * 0.30 * 100) / 100;
+    const codAmount = Math.max(0, Math.round((total - advanceAmount) * 100) / 100);
+    const paymentNowAmount = payFull ? total : advanceAmount;
+    const paymentNowAmountPaise = Math.round(paymentNowAmount * 100);
 
     // Load Razorpay script
     useEffect(() => {
@@ -134,10 +137,11 @@ function CheckoutPage() {
                 throw new Error("Failed to create order");
             }
 
-            // Create Razorpay order (for 30% advance only)
+            // Create Razorpay order (for advance or full payment depending on selection)
             const razorpayResponse: any = await api.createRazorpayOrder({
                 orderId,
-                amount: Math.round(advanceAmount * 100), // Convert to paise (30% only)
+                amount: paymentNowAmountPaise, // amount in paise
+                paymentType: payFull ? 'full' : 'advance',
             });
 
             const razorpayOrderId = razorpayResponse?.data?.razorpayOrderId;
@@ -148,10 +152,10 @@ function CheckoutPage() {
             // Open Razorpay checkout
             const options = {
                 key: import.meta.env.VITE_RAZORPAY_KEY || "rzp_test_key",
-                amount: Math.round(advanceAmount * 100), // 30% only in paise
+                amount: paymentNowAmountPaise,
                 currency: "INR",
                 name: "Morfyx Studio",
-                description: `Order of ${items.length} figure(s) - 30% Advance Payment`,
+                description: `Order of ${items.length} figure(s) - ${payFull ? 'Full Payment' : '30% Advance Payment'}`,
                 order_id: razorpayOrderId,
                 handler: async (response: RazorpayResponse) => {
                     try {
@@ -191,6 +195,7 @@ function CheckoutPage() {
                 notes: {
                     orderId,
                     userId: user?.id,
+                    paymentType: payFull ? 'full' : 'advance'
                 },
                 theme: {
                     color: "#c084fc",
@@ -398,6 +403,10 @@ function CheckoutPage() {
                                             <div className="text-xs text-muted-foreground">Secure online payment</div>
                                         </div>
                                     </div>
+                                    <div className="mt-4 flex items-center gap-3">
+                                        <input id="payFull" type="checkbox" checked={payFull} onChange={(e) => setPayFull(e.target.checked)} className="h-4 w-4" />
+                                        <label htmlFor="payFull" className="text-sm font-medium">Pay full amount now</label>
+                                    </div>
                                 </div>
 
                                 <button
@@ -410,7 +419,7 @@ function CheckoutPage() {
                                             <Loader2 className="h-5 w-5 animate-spin" /> Processing...
                                         </>
                                     ) : (
-                                        `Pay ₹${Math.round(advanceAmount)} Now (30%)`
+                                        payFull ? `Pay ₹${paymentNowAmount.toFixed(2)} Now (Full)` : `Pay ₹${advanceAmount.toFixed(2)} Now (30%)`
                                     )}
                                 </button>
                             </form>
@@ -451,14 +460,14 @@ function CheckoutPage() {
                                             <span className="text-xs font-semibold text-green-400">Pay Now (30%)</span>
                                             <span className="text-xs text-muted-foreground">Online via Razorpay</span>
                                         </div>
-                                        <span className="font-bold text-green-400">₹{Math.round(advanceAmount)}</span>
+                                            <span className="font-bold text-green-400">₹{advanceAmount.toFixed(2)}</span>
                                     </div>
                                     <div className="flex items-center justify-between p-3 rounded-lg bg-blue-500/10 border border-blue-500/30">
                                         <div className="flex flex-col">
                                             <span className="text-xs font-semibold text-blue-400">COD (70%)</span>
                                             <span className="text-xs text-muted-foreground">Pay on delivery</span>
                                         </div>
-                                        <span className="font-bold text-blue-400">₹{Math.round(codAmount)}</span>
+                                        <span className="font-bold text-blue-400">₹{codAmount.toFixed(2)}</span>
                                     </div>
                                     <div className="mt-2 p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
                                         <p className="text-xs text-yellow-600/80">💡 30% advance is non-refundable</p>

@@ -286,10 +286,10 @@ export function ProductFormPage() {
                                     }}
                                 >
                                     <option value="standard">Standard (Local)</option>
-                                    <option value="imported">Imported</option>
+                                    <option value="imported">Premium Collection</option>
                                 </Select>
                                 <div className="text-[11px] text-mutedForeground">
-                                    Standard = Shows on Products page | Imported = Shows on Imported Collections
+                                    Standard = Shows on Products page | Premium Collection = Shows on Premium Collections
                                 </div>
                             </div>
                             <div className="space-y-2 md:col-span-2">

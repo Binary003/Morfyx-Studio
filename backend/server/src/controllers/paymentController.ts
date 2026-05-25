@@ -11,7 +11,7 @@ import { Order, OrderDocument } from "../models/Order";
 import { updateStockAfterPayment } from "../services/orderService";
 
 export const createOrder = asyncHandler(async (req: Request, res: Response) => {
-  const { orderId } = req.body;
+  const { orderId, paymentType, amount } = req.body; // paymentType: 'advance' | 'full', amount: optional paise from client
   const userId = req.user?.id;
 
   if (!userId) {
@@ -31,20 +31,35 @@ export const createOrder = asyncHandler(async (req: Request, res: Response) => {
     throw new ApiError(409, "Order is already paid");
   }
 
-  const advanceAmount = Math.round(order.totalAmount * (env.advancePaymentPercent / 100));
-  if (advanceAmount <= 0) {
+  // Determine whether this order is for advance (default) or full payment
+  const isFull = paymentType === "full";
+
+  // If frontend provided an explicit amount (in paise), trust that; otherwise calculate server-side
+  let amountPaise: number;
+  if (typeof amount === "number" && amount > 0) {
+    amountPaise = Math.round(amount);
+  } else {
+    amountPaise = isFull
+      ? Math.round(order.totalAmount * 100)
+      : Math.round(order.totalAmount * env.advancePaymentPercent);
+  }
+
+  if (amountPaise <= 0) {
     throw new ApiError(400, "Invalid order amount");
   }
 
-  const razorpayOrder = await createRazorpayOrder(advanceAmount * 100);
+  // createRazorpayOrder expects amount in paise
+  const razorpayOrder = await createRazorpayOrder(amountPaise);
 
+  const advanceAmount = Math.round((amountPaise / 100) * 100) / 100;
   order.advanceAmount = advanceAmount;
-  order.remainingCOD = Math.max(0, order.totalAmount - advanceAmount);
+  order.remainingCOD = Math.max(0, Math.round((order.totalAmount - advanceAmount) * 100) / 100);
   order.paymentInfo = {
     provider: "razorpay",
     orderId: razorpayOrder.id,
     status: "pending",
-    advancePaid: false
+    advancePaid: false,
+    paymentFor: isFull ? "full" : "advance",
   };
   await order.save();
 
@@ -92,8 +107,12 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   }
 
   const payment = await fetchRazorpayPayment(razorpayPaymentId);
-  const expectedAdvanceAmount = Math.round(order.totalAmount * (env.advancePaymentPercent / 100));
-  const expectedAmountPaise = expectedAdvanceAmount * 100;
+
+  // Determine expected amount based on whether this order was created for full or advance
+  const paymentFor = (order.paymentInfo as any)?.paymentFor || "advance";
+  const expectedAmountPaise = paymentFor === "full"
+    ? Math.round(order.totalAmount * 100)
+    : Math.round(order.totalAmount * env.advancePaymentPercent);
 
   if (
     payment.order_id !== razorpayOrderId ||
@@ -104,8 +123,8 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
     throw new ApiError(400, "Payment details mismatch");
   }
 
-  const advanceAmount = expectedAdvanceAmount;
-  const remainingCOD = Math.max(0, order.totalAmount - advanceAmount);
+  const advanceAmount = Math.round((expectedAmountPaise / 100) * 100) / 100;
+  const remainingCOD = Math.max(0, Math.round((order.totalAmount - advanceAmount) * 100) / 100);
 
   order.advanceAmount = advanceAmount;
   order.remainingCOD = remainingCOD;
@@ -116,6 +135,7 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
     signature: razorpaySignature,
     status: "paid",
     advancePaid: true,
+    paymentFor: paymentFor,
   };
   order.orderStatus = "processing";
   order.shipmentStatus = "not_created";
@@ -136,17 +156,23 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   // Create notification as a best-effort side effect so payment verification
   // can still complete even if notification persistence fails.
   try {
+    const isFull = (order.paymentInfo as any)?.paymentFor === "full";
+    const userMessage = isFull
+      ? `Hi ${customerName}, we verified your full payment of ₹${advanceAmount}. Your order is now confirmed.`
+      : `Hi ${customerName}, we verified your payment of ₹${advanceAmount}. Your order is now confirmed and the remaining ₹${remainingCOD} will be collected on delivery.`;
+
     await createNotification({
       userId: notificationUserId,
       type: "order",
-      title: "Payment verified and order placed",
-      message: `Hi ${customerName}, we verified your payment of ₹${advanceAmount}. Your order is now confirmed and the remaining ₹${remainingCOD} will be collected on delivery.`,
+      title: isFull ? "Full payment received" : "Payment verified and order placed",
+      message: userMessage,
       data: {
         orderId: order._id,
         paymentStatus: "paid",
         orderStatus: "processing",
         advanceAmount,
-        remainingCOD
+        remainingCOD,
+        paymentFor: (order.paymentInfo as any)?.paymentFor || "advance",
       },
     });
   } catch (notificationError) {
@@ -154,9 +180,10 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   }
 
   try {
+    const isFull = (order.paymentInfo as any)?.paymentFor === "full";
     await createNotification({
       type: "order",
-      title: "Order placed and payment verified",
+      title: isFull ? "Order paid in full" : "Order placed and payment verified",
       message: `Order ${order._id} is paid and ready for manual shipment processing.`,
       data: {
         orderId: order._id,
@@ -164,7 +191,8 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
         orderStatus: "processing",
         advanceAmount,
         remainingCOD,
-        audience: "admin"
+        audience: "admin",
+        paymentFor: (order.paymentInfo as any)?.paymentFor || "advance",
       }
     });
   } catch (notificationError) {
@@ -178,14 +206,15 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
     userEmail = fallbackUser?.email;
   }
 
+  const isFull = (order.paymentInfo as any)?.paymentFor === "full";
+
   if (userEmail) {
     try {
       // Send payment confirmation to user asynchronously so verification API isn't delayed
-      sendEmail(
-        userEmail,
-        "Payment Received - Shipment Processing",
-        templates.paymentConfirmation(order as OrderDocument)
-      )
+      const subject = isFull ? "Full Payment Received - Shipment Processing" : "Payment Received - Shipment Processing";
+      const template = isFull ? templates.paymentConfirmationFull(order as OrderDocument) : templates.paymentConfirmation(order as OrderDocument);
+
+      sendEmail(userEmail, subject, template)
         .then(info => console.log(`Payment confirmation email queued to ${userEmail} - messageId: ${info?.messageId}`))
         .catch(emailError => console.error("Failed to send payment email:", emailError));
     } catch (emailError) {
@@ -194,11 +223,8 @@ export const verifyPayment = asyncHandler(async (req: Request, res: Response) =>
   }
 
   try {
-    await sendEmail(
-      env.adminEmail,
-      "New Order Received - Manual Shipment Required",
-      templates.adminPaymentNotification(order as OrderDocument)
-    );
+    const adminTemplate = isFull ? templates.adminPaymentNotificationFull(order as OrderDocument) : templates.adminPaymentNotification(order as OrderDocument);
+    await sendEmail(env.adminEmail, "New Order Received - Manual Shipment Required", adminTemplate);
     console.log("Admin notification sent");
   } catch (emailError) {
     console.error("Failed to send admin email:", emailError);

@@ -86,6 +86,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@MorfyxStudio" },
     ],
     links: [
+      { rel: "icon", type: "image/png", href: "/logo-m.png", sizes: "32x32" },
+      { rel: "apple-touch-icon", href: "/logo-m.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "" },
       {

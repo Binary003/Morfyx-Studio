@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { LogOut, Search, ShoppingBag, Heart, User, Menu, X } from "lucide-react";
+import { LogOut, Search, ShoppingBag, User, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "@tanstack/react-router";
 import { useCustomFigureModal } from "./CustomFigureModal";
@@ -19,7 +19,7 @@ import {
 const links = [
   { label: "Home", to: "/" as const },
   { label: "Shop", to: "/shop" as const },
-  { label: "Imported Collection", to: "/imported" as const },
+  { label: "Premium Collection", to: "/imported" as const },
   { label: "Custom Figures", to: "/custom" as const, action: "custom" as const },
   { label: "About", to: "/about" as const },
   { label: "Contact", to: "/contact" as const },
@@ -44,7 +44,7 @@ function getCurrentPageLabel(pathname: string) {
   if (pathname.startsWith("/login")) return "Log In";
   if (pathname.startsWith("/signup")) return "Sign Up";
   if (pathname.startsWith("/shop")) return "Shop";
-  if (pathname.startsWith("/imported")) return "Imported Collection";
+  if (pathname.startsWith("/imported")) return "Premium Collection";
   if (pathname.startsWith("/custom")) return "Custom Figures";
   if (pathname.startsWith("/about")) return "About";
   if (pathname.startsWith("/contact")) return "Contact";
@@ -56,6 +56,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [logoImageMissing, setLogoImageMissing] = useState(false);
   const [query, setQuery] = useState("");
   const { pathname } = useLocation();
   const { itemCount } = useCart();
@@ -113,17 +114,30 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
           className={`flex items-center justify-between rounded-2xl px-4 sm:px-6 py-3 transition-all ${scrolled ? "glass glow-cyan" : ""
             }`}
         >
-          <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:gap-2">
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="relative h-9 w-9 rounded-xl bg-[var(--gradient-neon)] grid place-items-center font-bold text-primary-foreground glow-pink">
-                <span className="font-display">M</span>
-                <div className="absolute inset-0 rounded-xl bg-[var(--gradient-neon)] blur-lg opacity-50 group-hover:opacity-100 transition" />
+          <div className="min-w-0 flex flex-1 flex-col items-start gap-1 sm:flex-none sm:flex-row sm:items-center sm:gap-2">
+            <Link to="/" className="-ml-1 flex min-w-0 max-w-[calc(100vw-9rem)] items-center gap-2 group sm:ml-0 sm:max-w-none">
+              <div className="flex h-14 w-14 items-center justify-center shrink-0 sm:h-20 sm:w-20">
+                {logoImageMissing ? (
+                  <span className="font-display text-3xl leading-none sm:text-4xl">M</span>
+                ) : (
+                  <img
+                    src="/logo-m.png"
+                    alt="Morfyx Studio logo"
+                    className="h-full w-full object-contain"
+                    onError={() => setLogoImageMissing(true)}
+                  />
+                )}
               </div>
-              <div className="leading-none">
-                <div className="font-display text-lg font-bold tracking-tight">
+              <div className="min-w-0 leading-tight">
+                <div className="truncate font-display text-sm font-bold tracking-tight sm:text-lg">
                   Morfyx <span className="text-gradient-neon">Studio</span>
                 </div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">India Studio</div>
+                <div className="mt-0.5 truncate text-[8px] font-semibold uppercase tracking-[0.04em] text-foreground/80 sm:text-[11px] sm:tracking-[0.08em] sm:text-foreground/85 sm:whitespace-nowrap">
+                  <span className="sm:hidden">COLLECT · DISPLAY · RELIVE</span>
+                  <span className="hidden sm:inline">
+                    COLLECT <span className="mx-1 text-foreground/55">|</span> DISPLAY <span className="mx-1 text-foreground/55">|</span> RELIVE
+                  </span>
+                </div>
               </div>
             </Link>
           </div>
@@ -158,9 +172,6 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
               aria-label="Search"
             >
               <Search className="h-4 w-4" />
-            </IconBtn>
-            <IconBtn aria-label="Wishlist">
-              <Heart className="h-4 w-4" />
             </IconBtn>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

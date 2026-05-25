@@ -17,10 +17,14 @@ interface Order {
   id?: string;
   orderNumber?: string;
   orderStatus: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+  advanceAmount?: number;
+  remainingCOD?: number;
   paymentInfo?: {
     status?: "pending" | "paid" | "failed";
+    paymentFor?: "advance" | "full";
   };
   shipmentStatus?: "not_created" | "pending" | "picked" | "shipped" | "delivered" | "cancelled";
+  deliveryDays?: number;
   trackingId?: string;
   totalAmount: number;
   orderedProducts: Array<{ name: string; quantity: number; price: number; image?: string }>;
@@ -165,16 +169,53 @@ function OrdersPage() {
     }
   };
 
-  const getPaymentStatusLabel = (status?: string) => {
-    switch (status) {
-      case "paid":
-        return "Paid";
-      case "failed":
-        return "Failed";
-      case "pending":
-      default:
-        return "Pending";
+  const getDeliveryDaysLabel = (days?: number) => {
+    if (typeof days !== "number" || !Number.isFinite(days) || days <= 0) {
+      return null;
     }
+
+    return `Shipment in ${days} day${days === 1 ? "" : "s"}`;
+  };
+
+  const formatCurrency = (amount: number) => `₹${amount.toLocaleString("en-IN")}`;
+
+  const getPaymentDisplay = (order: Order) => {
+    const status = order.paymentInfo?.status;
+
+    if (status === "paid") {
+      if (order.paymentInfo?.paymentFor === "full") {
+        return {
+          label: "Full Payment Done",
+          detail: `Paid ${formatCurrency(order.totalAmount || 0)}`
+        };
+      }
+
+      const paidAmount =
+        typeof order.advanceAmount === "number" && order.advanceAmount > 0
+          ? order.advanceAmount
+          : Math.round((order.totalAmount || 0) * 0.3 * 100) / 100;
+      const remainingAmount =
+        typeof order.remainingCOD === "number"
+          ? order.remainingCOD
+          : Math.max(0, Math.round(((order.totalAmount || 0) - paidAmount) * 100) / 100);
+
+      return {
+        label: "Partial Payment Done",
+        detail: `Paid ${formatCurrency(paidAmount)} · Remaining ${formatCurrency(remainingAmount)}`
+      };
+    }
+
+    if (status === "failed") {
+      return {
+        label: "Payment Failed",
+        detail: undefined
+      };
+    }
+
+    return {
+      label: "Pending",
+      detail: undefined
+    };
   };
 
   const getPaymentBadgeClass = (status?: string) => {
@@ -257,22 +298,40 @@ function OrdersPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[260px]">
-                        <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 lg:min-w-[260px] items-stretch">
+                        <div className="rounded-xl border border-white/10 bg-black/10 p-3 flex h-full min-h-[104px] flex-col items-center justify-center text-center gap-1">
                           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Payment</div>
-                          <div className={`mt-1 inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getPaymentBadgeClass(order.paymentInfo?.status)}`}>
-                            {getPaymentStatusLabel(order.paymentInfo?.status)}
-                          </div>
+                          {(() => {
+                            const paymentDisplay = getPaymentDisplay(order);
+
+                            return (
+                              <>
+                                <div className={`flex w-full items-center justify-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-center ${getPaymentBadgeClass(order.paymentInfo?.status)}`}>
+                                  {paymentDisplay.label}
+                                </div>
+                                {paymentDisplay.detail && (
+                                  <div className="w-full text-center text-xs leading-tight text-muted-foreground">
+                                    {paymentDisplay.detail}
+                                  </div>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-black/10 p-3">
+                        <div className="rounded-xl border border-white/10 bg-black/10 p-3 flex h-full min-h-[104px] flex-col items-center justify-center text-center gap-1">
                           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Shipping</div>
-                          <div className={`mt-1 inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
+                          <div className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-wider ${getShipmentBadgeClass(order.shipmentStatus)}`}>
                             {getShipmentStatusLabel(order.shipmentStatus)}
                           </div>
+                          {getDeliveryDaysLabel(order.deliveryDays) && (
+                            <div className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground text-center">
+                              {getDeliveryDaysLabel(order.deliveryDays)}
+                            </div>
+                          )}
                         </div>
-                        <div className="rounded-xl border border-white/10 bg-black/10 p-3 text-right">
+                        <div className="rounded-xl border border-white/10 bg-black/10 p-3 flex h-full min-h-[104px] flex-col items-center justify-center text-center gap-1">
                           <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">Total</div>
-                          <div className="text-base sm:text-lg font-bold mt-1 text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
+                          <div className="text-base sm:text-lg font-bold text-gradient-neon">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</div>
                         </div>
                       </div>
                     </div>
