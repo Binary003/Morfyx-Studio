@@ -3,11 +3,11 @@ import { Star, Quote } from "lucide-react";
 import { SectionHead } from "./Collections";
 
 const reviews = [
-  { name: "Hiro T.", role: "Collector · Tokyo", text: "The detail on my Yumi figure is insane. Better than studio releases I own — and the packaging feels luxury.", rating: 5 },
-  { name: "Marcus L.", role: "Collector · Berlin", text: "My imported Rem arrived sealed and pristine. The authenticity certificate sealed the deal — pure quality.", rating: 5 },
-  { name: "Aiko R.", role: "Collector · Osaka", text: "I commissioned a custom build via WhatsApp. The sculptors nailed my OC in two iterations. Worth every yen.", rating: 5 },
-  { name: "Diego F.", role: "Collector · Mexico", text: "Easily the centerpiece of my display shelf. The resin glow under lights is unreal.", rating: 5 },
-  { name: "Sara K.", role: "Collector · London", text: "The translucent resin glows under display lights. It's the centerpiece of my room now.", rating: 5 },
+  { name: "Raj Sharma", role: "Collector · Mumbai", text: "Morfyx Studio figures are next level! The hand-painted details on my Tanjiro figure are incredible. Worth every rupee.", rating: 5 },
+  { name: "Priya Verma", role: "Collector · Delhi", text: "I ordered a custom commission through WhatsApp and the team nailed it. Delivery to Delhi was fast and packaging was pristine.", rating: 5 },
+  { name: "Arjun Singh", role: "Collector · Bangalore", text: "Finally, premium anime figures made in India. The quality matches international studios but the customer support is unbeatable.", rating: 5 },
+  { name: "Neha Patel", role: "Collector · Pune", text: "The imported figures are 100% authentic with certificates. My Rem figure is the crown jewel of my collection. Highly recommend!", rating: 5 },
+  { name: "Vikram Desai", role: "Collector · Kolkata", text: "Ordered during Diwali sale and got an amazing deal. The resin glow under display lights is stunning. Best purchase ever!", rating: 5 },
 ];
 
 export function Testimonials() {
@@ -16,7 +16,8 @@ export function Testimonials() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHead
           eyebrow="Loved by collectors"
-          title="Stories from the OtakuForge community"
+          title="Join the Morfyx collectors family"
+          desc="Real reviews from collectors across India who trust Morfyx Studio for premium anime figures."
         />
       </div>
 

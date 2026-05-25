@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Box, ShoppingBag, Star, X } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHead } from "./Collections";
 import { formatPrice, type Product, type ProductType, useAllProducts, useProducts } from "@/lib/products";
 import { useCart } from "@/lib/cart";
+import { useProductDetail } from "@/lib/productDetailContext";
 
 function normalizeCategory(value: string) {
     return value
@@ -37,9 +38,14 @@ export function ProductsSection({
     const { data: catalogProducts } = useAllProducts();
     const { data: typedProducts } = useProducts(productType);
     const { addItem } = useCart();
+    const { setIsProductDetailOpen } = useProductDetail();
     const [activeProduct, setActiveProduct] = useState<Product | null>(null);
     const normalizedActiveCategory = activeCategory ? normalizeCategory(activeCategory) : null;
     const sourceProducts = normalizedActiveCategory ? catalogProducts : typedProducts;
+
+    useEffect(() => {
+        setIsProductDetailOpen(!!activeProduct);
+    }, [activeProduct, setIsProductDetailOpen]);
 
     const filtered = useMemo(() => {
         if (!normalizedActiveCategory) {
@@ -121,10 +127,10 @@ export function ProductsSection({
                         <button
                             type="button"
                             onClick={() => setActiveProduct(null)}
-                            className="absolute right-3 top-16 h-8 w-8 rounded-full glass grid place-items-center hover:glow-pink transition z-10 sm:right-4 sm:top-4 sm:h-9 sm:w-9"
+                            className="absolute right-3 top-4 h-9 w-9 rounded-full glass grid place-items-center hover:glow-pink transition z-10 sm:right-4 sm:h-10 sm:w-10"
                             aria-label="Close"
                         >
-                            <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                            <X className="h-5 w-5 sm:h-6 sm:w-6 font-bold" />
                         </button>
                         <div className="grid md:grid-cols-2 max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] overflow-y-auto">
                             <div className="relative min-h-[220px] sm:min-h-[320px]">
@@ -224,7 +230,7 @@ function ProductCard({
             whileHover={{ y: -8 }}
             className="group glass rounded-3xl overflow-hidden flex flex-col text-left cursor-pointer"
         >
-            <div className="relative aspect-[4/5] sm:aspect-square overflow-hidden bg-secondary/50">
+            <div className="relative aspect-square overflow-hidden bg-secondary/50">
                 <img
                     src={product.img}
                     alt={product.name}

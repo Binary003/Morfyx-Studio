@@ -13,6 +13,7 @@ import { CustomFigureModalProvider } from "@/components/site/CustomFigureModal";
 import { FloatingWhatsAppButton } from "@/components/site/FloatingWhatsAppButton";
 import { CartProvider } from "@/lib/cart";
 import { AuthProvider } from "@/lib/auth";
+import { ProductDetailProvider } from "@/lib/productDetailContext";
 
 function NotFoundComponent() {
   return (
@@ -124,10 +125,12 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <CartProvider>
-          <CustomFigureModalProvider>
-            <Outlet />
-            <FloatingWhatsAppButton />
-          </CustomFigureModalProvider>
+          <ProductDetailProvider>
+            <CustomFigureModalProvider>
+              <Outlet />
+              <FloatingWhatsAppButton />
+            </CustomFigureModalProvider>
+          </ProductDetailProvider>
         </CartProvider>
       </AuthProvider>
     </QueryClientProvider>

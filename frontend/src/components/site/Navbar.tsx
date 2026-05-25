@@ -8,6 +8,7 @@ import { CartDrawer } from "./CartDrawer";
 import { useCart } from "@/lib/cart";
 import { formatPrice, useAllProducts } from "@/lib/products";
 import { useAuth } from "@/lib/auth";
+import { useProductDetail } from "@/lib/productDetailContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,6 +63,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
   const { itemCount } = useCart();
   const { isAuthenticated, user, logout } = useAuth();
   const { data: allProducts } = useAllProducts();
+  const { isProductDetailOpen } = useProductDetail();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -106,8 +108,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
       initial={{ y: -40, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6 }}
-      className={`fixed left-0 right-0 ${withOfferStrip ? "top-9" : "top-0"} z-40 transition-all duration-500 ${scrolled ? "py-3" : "py-5"
-        }`}
+      className={`fixed left-0 right-0 ${withOfferStrip ? "top-9" : "top-0"} z-40 transition-all duration-500 ${scrolled ? "py-3" : "py-5"} ${isProductDetailOpen ? "hidden sm:block" : ""}`}
     >
       <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8`}>
         <div
