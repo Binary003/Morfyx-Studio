@@ -21,7 +21,7 @@ export function ImportedCollection() {
 
   useEffect(() => {
     if (products && products.length > 0) {
-      const highest = products.reduce((max, product) => 
+      const highest = products.reduce((max, product) =>
         (product.price > max.price) ? product : max
       );
       setTopProduct(highest);
@@ -66,7 +66,7 @@ export function ImportedCollection() {
                   </div>
                   <div className="mt-4 flex items-end justify-between gap-4">
                     <div className="font-display text-3xl font-bold text-gradient-neon">₹{topProduct.price}</div>
-                    <button 
+                    <button
                       onClick={handleAddToCart}
                       disabled={topProduct.stock !== undefined && topProduct.stock <= 0}
                       className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"

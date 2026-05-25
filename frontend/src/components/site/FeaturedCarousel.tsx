@@ -59,7 +59,7 @@ export function FeaturedCarousel() {
                 <p className="text-muted-foreground">{s.description || "Premium collector-grade figure"}</p>
                 <div className="flex items-center gap-4 mt-2">
                   <div className="font-display text-4xl font-bold text-gradient-neon">{formatPrice(s.price)}</div>
-                  <button 
+                  <button
                     onClick={() => {
                       const added = addItem(s);
                       if (added) {
