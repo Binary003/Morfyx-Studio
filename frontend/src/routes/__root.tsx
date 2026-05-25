@@ -7,6 +7,7 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { Toaster } from "sonner";
 
 import appCss from "../styles.css?url";
 import { CustomFigureModalProvider } from "@/components/site/CustomFigureModal";
@@ -129,6 +130,7 @@ function RootComponent() {
             <CustomFigureModalProvider>
               <Outlet />
               <FloatingWhatsAppButton />
+              <Toaster />
             </CustomFigureModalProvider>
           </ProductDetailProvider>
         </CartProvider>
