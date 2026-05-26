@@ -30,18 +30,20 @@ export function FeaturedCarousel() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHead eyebrow="Featured Drops" title="The collector's spotlight" />
 
-        <div className="mt-16 relative rounded-3xl overflow-hidden glass neon-border min-h-[500px]">
+        <div className="mt-16 relative rounded-3xl overflow-hidden glass neon-border">
           <AnimatePresence mode="wait">
             <motion.div
               key={i}
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               transition={{ duration: 0.6 }}
-              className="grid lg:grid-cols-2 min-h-[500px]"
+              className="grid lg:grid-cols-2 lg:min-h-[500px]"
             >
-              <div className="relative overflow-hidden">
+              <div className="relative aspect-[4/3] overflow-hidden sm:aspect-[16/10] lg:aspect-auto lg:min-h-[500px]">
                 <motion.img
                   initial={{ scale: 1.1 }} animate={{ scale: 1 }} transition={{ duration: 0.8 }}
-                  src={s.img} alt={s.name} className="absolute inset-0 w-full h-full object-cover"
+                  src={s.img}
+                  alt={s.name}
+                  className="absolute inset-0 h-full w-full object-cover object-[center_top] sm:object-center"
                 />
                 <div className="absolute inset-0" style={{ background: "var(--gradient-hero)", opacity: 0.4 }} />
               </div>
