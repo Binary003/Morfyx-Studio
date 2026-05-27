@@ -42,34 +42,36 @@ export function ImportedCollection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHead eyebrow="Premium Collection" title="Collector's showcase — Premium Edition" desc="Handcrafted premium figures, available exclusively in India. Each piece is a masterwork." />
 
-        <div className="mt-16 grid lg:grid-cols-[1.2fr_1fr] gap-8 items-stretch">
+        <div className="mt-16 grid lg:grid-cols-[1.05fr_0.95fr] gap-6 lg:gap-8 items-stretch">
           <motion.div
             initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}
             transition={{ duration: 0.7 }}
-            className="relative rounded-3xl overflow-hidden glass neon-border min-h-[500px]"
+            className="relative rounded-3xl overflow-hidden glass neon-border aspect-[4/5] sm:aspect-[16/11] lg:aspect-auto lg:min-h-[420px]"
           >
             {topProduct && (
               <>
-                <img src={topProduct.img} alt={topProduct.name} className="absolute inset-0 w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-secondary/40 p-3 sm:p-4">
+                  <img src={topProduct.img} alt={topProduct.name} className="h-full w-full object-contain object-center" />
+                </div>
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
                 <div className="absolute top-5 left-5 inline-flex items-center gap-2 rounded-full bg-[var(--gradient-neon)] text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 glow-pink">
                   ⭐ Premium · India
                 </div>
-                <div className="absolute bottom-0 inset-x-0 p-8">
+                <div className="absolute bottom-0 inset-x-0 p-5 sm:p-6 lg:p-7">
                   <div className="text-[10px] uppercase tracking-[0.3em] text-accent">{topProduct.category}</div>
-                  <h3 className="font-display text-3xl sm:text-4xl font-bold mt-2">{topProduct.name}</h3>
-                  <p className="text-muted-foreground mt-2 max-w-md">{topProduct.description}</p>
-                  <div className="mt-5 flex items-center gap-3">
+                  <h3 className="font-display text-2xl sm:text-3xl font-bold mt-2 leading-tight">{topProduct.name}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mt-2 max-w-md line-clamp-3">{topProduct.description}</p>
+                  <div className="mt-4 flex items-center gap-3">
                     <span className={topProduct.stock !== undefined && topProduct.stock > 0 ? "text-green-400 text-xs font-semibold" : "text-destructive text-xs font-semibold"}>
                       {topProduct.stock !== undefined && topProduct.stock > 0 ? `In Stock (${topProduct.stock})` : "Out of Stock"}
                     </span>
                   </div>
-                  <div className="mt-4 flex items-end justify-between gap-4">
-                    <div className="font-display text-3xl font-bold text-gradient-neon">₹{topProduct.price}</div>
+                  <div className="mt-4 flex items-end justify-between gap-3">
+                    <div className="font-display text-2xl sm:text-3xl font-bold text-gradient-neon">₹{topProduct.price}</div>
                     <button
                       onClick={handleAddToCart}
                       disabled={topProduct.stock !== undefined && topProduct.stock <= 0}
-                      className="rounded-full bg-[var(--gradient-neon)] px-6 py-3 font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      className="rounded-full bg-[var(--gradient-neon)] px-5 py-2.5 text-sm font-semibold text-primary-foreground glow-pink hover:scale-105 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
                       Add to Cart
                     </button>

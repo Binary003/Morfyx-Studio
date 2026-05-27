@@ -40,12 +40,41 @@ export function ProductsSection({
     const { addItem } = useCart();
     const { setIsProductDetailOpen } = useProductDetail();
     const [activeProduct, setActiveProduct] = useState<Product | null>(null);
+    const [activeImageIndex, setActiveImageIndex] = useState(0);
     const normalizedActiveCategory = activeCategory ? normalizeCategory(activeCategory) : null;
     const sourceProducts = normalizedActiveCategory ? catalogProducts : typedProducts;
 
     useEffect(() => {
         setIsProductDetailOpen(!!activeProduct);
     }, [activeProduct, setIsProductDetailOpen]);
+
+    const activeImages = useMemo(() => {
+        if (!activeProduct) {
+            return [];
+        }
+
+        if (activeProduct.images && activeProduct.images.length > 0) {
+            return activeProduct.images.slice(0, 3).filter(Boolean);
+        }
+
+        return [activeProduct.img];
+    }, [activeProduct]);
+
+    useEffect(() => {
+        setActiveImageIndex(0);
+    }, [activeProduct]);
+
+    useEffect(() => {
+        if (!activeProduct || activeImages.length <= 1) {
+            return;
+        }
+
+        const timer = window.setInterval(() => {
+            setActiveImageIndex((current) => (current + 1) % activeImages.length);
+        }, 3500);
+
+        return () => window.clearInterval(timer);
+    }, [activeProduct, activeImages.length]);
 
     const filtered = useMemo(() => {
         if (!normalizedActiveCategory) {
@@ -117,36 +146,89 @@ export function ProductsSection({
 
             {activeProduct && (
                 <div
-                    className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm grid place-items-center p-2 sm:p-4"
-                    onClick={() => setActiveProduct(null)}
+                    className="fixed inset-0 z-[120] bg-black/80 backdrop-blur-sm grid items-start justify-center overflow-y-auto px-2 pt-16 sm:items-center sm:px-4 sm:pt-24"
+                    onClick={() => {
+                        setActiveProduct(null);
+                        setActiveImageIndex(0);
+                    }}
                 >
                     <div
-                        className="relative max-w-3xl w-full max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] glass neon-border rounded-2xl sm:rounded-3xl overflow-hidden"
+                        className="relative mt-2 max-w-4xl w-full max-h-[calc(100dvh-5rem)] sm:mt-0 sm:max-h-[calc(100dvh-6rem)] glass neon-border rounded-2xl sm:rounded-3xl overflow-hidden"
                         onClick={(event) => event.stopPropagation()}
                     >
                         <button
                             type="button"
-                            onClick={() => setActiveProduct(null)}
+                            onClick={() => {
+                                setActiveProduct(null);
+                                setActiveImageIndex(0);
+                            }}
                             className="absolute right-3 top-4 h-9 w-9 rounded-full glass grid place-items-center hover:glow-pink transition z-10 sm:right-4 sm:h-10 sm:w-10"
                             aria-label="Close"
                         >
                             <X className="h-5 w-5 sm:h-6 sm:w-6 font-bold" />
                         </button>
-                        <div className="grid md:grid-cols-2 max-h-[calc(100vh-1rem)] sm:max-h-[calc(100vh-2rem)] overflow-y-auto">
-                            <div className="relative min-h-[220px] sm:min-h-[320px]">
-                                <img
-                                    src={activeProduct.img}
-                                    alt={activeProduct.name}
-                                    className="absolute inset-0 h-full w-full object-cover"
-                                />
+                        <div className="grid min-h-0 md:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] max-h-[calc(100dvh-5rem)] sm:max-h-[calc(100dvh-6rem)] overflow-y-auto">
+                            <div className="relative aspect-[4/5] min-h-[200px] sm:aspect-[3/4] md:min-h-[360px] overflow-hidden bg-secondary/40">
+                                <div className="absolute inset-0 p-3 sm:p-4">
+                                    {activeImages.map((image, index) => (
+                                        <motion.img
+                                            key={`${activeProduct.id}-${index}-${image}`}
+                                            src={image}
+                                            alt={`${activeProduct.name} image ${index + 1}`}
+                                            initial={{ opacity: 0, scale: 1.04 }}
+                                            animate={{
+                                                opacity: index === activeImageIndex ? 1 : 0,
+                                                scale: index === activeImageIndex ? 1 : 1.04,
+                                            }}
+                                            transition={{ duration: 0.35 }}
+                                            className="absolute inset-0 h-full w-full object-contain object-center"
+                                            aria-hidden={index !== activeImageIndex}
+                                        />
+                                    ))}
+                                </div>
                                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/30 to-transparent" />
                                 {activeProduct.badge && (
                                     <span className="absolute top-4 left-4 rounded-full bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 glow-pink">
                                         {activeProduct.badge}
                                     </span>
                                 )}
+                                {activeImages.length > 1 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            aria-label="Previous image"
+                                            onClick={() => setActiveImageIndex((current) => (current - 1 + activeImages.length) % activeImages.length)}
+                                            className="absolute left-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full glass hover:glow-pink transition sm:left-4 sm:h-11 sm:w-11"
+                                        >
+                                            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="m15 18-6-6 6-6" />
+                                            </svg>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label="Next image"
+                                            onClick={() => setActiveImageIndex((current) => (current + 1) % activeImages.length)}
+                                            className="absolute right-3 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full glass hover:glow-pink transition sm:right-4 sm:h-11 sm:w-11"
+                                        >
+                                            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="m9 18 6-6-6-6" />
+                                            </svg>
+                                        </button>
+                                        <div className="absolute bottom-4 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+                                            {activeImages.map((_, index) => (
+                                                <button
+                                                    key={index}
+                                                    type="button"
+                                                    aria-label={`Go to image ${index + 1}`}
+                                                    onClick={() => setActiveImageIndex(index)}
+                                                    className={`h-2 rounded-full transition-all ${index === activeImageIndex ? "w-8 bg-[var(--gradient-neon)]" : "w-2 bg-white/40"}`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
                             </div>
-                            <div className="p-4 sm:p-8 flex flex-col gap-3 sm:gap-4">
+                            <div className="min-h-0 p-4 sm:p-8 flex flex-col gap-3 sm:gap-4 pb-8 sm:pb-8">
                                 <div className="text-[10px] uppercase tracking-[0.3em] text-accent">
                                     {activeProduct.category}
                                 </div>

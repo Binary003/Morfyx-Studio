@@ -113,7 +113,7 @@ export function ProductFormPage() {
         const newImages = files.map(file => ({ file }));
         setForm(prev => ({
             ...prev,
-            images: [...prev.images, ...newImages].slice(0, 8) // Max 8 images
+            images: [...prev.images, ...newImages].slice(0, 3) // Max 3 images
         }));
     };
 
@@ -329,7 +329,7 @@ export function ProductFormPage() {
                                                 </button>
                                             </div>
                                         ))}
-                                        {form.images.length < 8 && (
+                                        {form.images.length < 3 && (
                                             <button
                                                 type="button"
                                                 onClick={() => fileInputRef.current?.click()}
@@ -347,7 +347,7 @@ export function ProductFormPage() {
                                         <Upload className="h-8 w-8 mx-auto text-mutedForeground mb-2" />
                                         <div className="text-sm font-semibold">Click to upload images</div>
                                         <div className="text-xs text-mutedForeground mt-1">
-                                            Drag and drop or click to select (up to 8 images)
+                                            Drag and drop or click to select (up to 3 images)
                                         </div>
                                     </div>
                                 )}

@@ -23,11 +23,12 @@ export type Product = {
 
 export type ApiProduct = {
     id: string;
+    images?: string[];
     name: string;
     price: number;
     stock: number;
     rating?: number;
-    images?: string[];
+    images?: Array<string | { url?: string }>;
     category: string;
     description: string;
 };
@@ -84,8 +85,18 @@ function clearStaleProductCache(limit: number) {
     }
 }
 
+function normalizeProductImages(images: Array<string | { url?: string }> | undefined, fallback: string) {
+    const normalized = (images || [])
+        .map((image) => (typeof image === "string" ? image : image?.url || ""))
+        .filter(Boolean)
+        .slice(0, 3);
+
+    return normalized.length > 0 ? normalized : [fallback];
+}
+
 function mapApiProduct(p: any, type: ProductType): Product {
     const normalizedType = p.origin === "imported" || p.productType === "imported" ? "imported" : type;
+    const images = normalizeProductImages(p.images, p1);
     return {
         id: p._id || p.id,
         name: p.name,
@@ -93,7 +104,8 @@ function mapApiProduct(p: any, type: ProductType): Product {
         oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
         rating: p.rating || 4.5,
         badge: p.badge || (p.featured ? "Featured" : undefined),
-        img: p.images?.[0]?.url || p.images?.[0] || p1,
+        img: images[0],
+        images,
         category: p.animeCategory?.name || p.animeCategory?.slug || p.category?.name || p.category || "General",
         description: p.description,
         type: normalizedType,

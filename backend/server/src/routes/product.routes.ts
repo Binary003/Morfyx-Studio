@@ -12,8 +12,8 @@ router.get("/search", search);
 router.get("/:id", getOne);
 
 // Protected admin endpoints
-router.post("/", requireAuth, requireRole("admin"), upload.array("images", 8), create);
-router.put("/:id", requireAuth, requireRole("admin"), upload.array("images", 8), update);
+router.post("/", requireAuth, requireRole("admin"), upload.array("images", 3), create);
+router.put("/:id", requireAuth, requireRole("admin"), upload.array("images", 3), update);
 router.delete("/:id", requireAuth, requireRole("admin"), remove);
 
 export default router;
