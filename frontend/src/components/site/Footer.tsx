@@ -1,5 +1,6 @@
 import { Instagram, MessageCircle, Youtube, Send } from "lucide-react";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { BrandLogo } from "./BrandLogo";
 
 const cols = [
   { t: "Shop", links: ["New Arrivals", "Bestsellers", "Limited Editions", "Imported Collection"] },
@@ -41,13 +42,12 @@ export function Footer() {
 
         <div className="mt-16 grid grid-cols-2 lg:grid-cols-6 gap-10">
           <div className="col-span-2">
-            <div className="flex items-center gap-2">
-              <div className="h-10 w-10 rounded-xl bg-[var(--gradient-neon)] grid place-items-center font-bold text-primary-foreground glow-pink">M</div>
-              <div>
-                <div className="font-display text-xl font-bold">Morfyx <span className="text-gradient-neon">Studio</span></div>
-                <div className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">India Studio</div>
-              </div>
-            </div>
+            <BrandLogo
+              className="items-center"
+              logoClassName="h-12 w-12 sm:h-14 sm:w-14"
+              textClassName="space-y-0.5"
+              taglineClassName="text-[10px] tracking-[0.22em] text-muted-foreground sm:text-[11px]"
+            />
             <p className="text-sm text-muted-foreground mt-4 max-w-sm">
               Premium anime figures and custom 3D collectibles crafted in India — shipped across the country from our single studio.
             </p>

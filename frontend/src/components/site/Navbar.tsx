@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { LogOut, Search, ShoppingBag, User, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLocation } from "@tanstack/react-router";
+import { BrandLogo } from "./BrandLogo";
 import { useCustomFigureModal } from "./CustomFigureModal";
 import { CartDrawer } from "./CartDrawer";
 import { useCart } from "@/lib/cart";
@@ -57,7 +58,6 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
-  const [logoImageMissing, setLogoImageMissing] = useState(false);
   const [query, setQuery] = useState("");
   const { pathname } = useLocation();
   const { itemCount } = useCart();
@@ -116,31 +116,7 @@ export function Navbar({ withOfferStrip = false }: { withOfferStrip?: boolean })
             }`}
         >
           <div className="min-w-0 flex flex-1 flex-col items-start gap-1 sm:flex-none sm:flex-row sm:items-center sm:gap-2">
-            <Link to="/" className="-ml-1 flex min-w-0 max-w-[calc(100vw-9rem)] items-center gap-2 group sm:ml-0 sm:max-w-none">
-              <div className="flex h-14 w-14 items-center justify-center shrink-0 sm:h-20 sm:w-20">
-                {logoImageMissing ? (
-                  <span className="font-display text-3xl leading-none sm:text-4xl">M</span>
-                ) : (
-                  <img
-                    src="/logo-m.png"
-                    alt="Morfyx Studio logo"
-                    className="h-full w-full object-contain"
-                    onError={() => setLogoImageMissing(true)}
-                  />
-                )}
-              </div>
-              <div className="min-w-0 leading-tight">
-                <div className="truncate font-display text-sm font-bold tracking-tight sm:text-lg">
-                  Morfyx <span className="text-gradient-neon">Studio</span>
-                </div>
-                <div className="mt-0.5 truncate text-[8px] font-semibold uppercase tracking-[0.04em] text-foreground/80 sm:text-[11px] sm:tracking-[0.08em] sm:text-foreground/85 sm:whitespace-nowrap">
-                  <span className="sm:hidden">COLLECT · DISPLAY · RELIVE</span>
-                  <span className="hidden sm:inline">
-                    COLLECT <span className="mx-1 text-foreground/55">|</span> DISPLAY <span className="mx-1 text-foreground/55">|</span> RELIVE
-                  </span>
-                </div>
-              </div>
-            </Link>
+            <BrandLogo className="-ml-1 max-w-[calc(100vw-9rem)] sm:ml-0 sm:max-w-none" />
           </div>
 
           <NavLinks pathname={pathname} />
