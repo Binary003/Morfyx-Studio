@@ -130,11 +130,13 @@ class AdminApiClient {
         page?: number;
         limit?: number;
         category?: string;
+        search?: string;
     }) {
         const query = new URLSearchParams();
         if (params?.page) query.append("page", params.page.toString());
         if (params?.limit) query.append("limit", params.limit.toString());
         if (params?.category) query.append("category", params.category);
+        if (params?.search) query.append("search", params.search);
 
         const response = await this.request<any>(`/products?${query}`);
 

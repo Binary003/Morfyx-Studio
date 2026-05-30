@@ -100,8 +100,8 @@ function mapApiProduct(p: any, type: ProductType): Product {
     return {
         id: p._id || p.id,
         name: p.name,
-        price: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : p.price,
-        oldPrice: p.discountPrice && p.discountPrice > 0 ? p.price : undefined,
+        price: p.price,
+        oldPrice: p.discountPrice && p.discountPrice > 0 ? p.discountPrice : undefined,
         rating: p.rating || 4.5,
         badge: p.badge || (p.featured ? "Featured" : undefined),
         img: images[0],

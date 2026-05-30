@@ -53,6 +53,24 @@ export const listProducts = async (query: any) => {
   const { page, limit, skip } = parsePagination(query);
   const filter: any = {};
 
+  const search = String(query.search || "").trim();
+  if (search) {
+    const tokens = search
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (tokens.length > 0) {
+      filter.$and = tokens.map((token) => ({
+        $or: [
+          { name: { $regex: token, $options: "i" } },
+          { description: { $regex: token, $options: "i" } },
+          { tags: { $regex: token, $options: "i" } }
+        ]
+      }));
+    }
+  }
+
   // Handle category filter by name
   if (query.category) {
     const category = await Category.findOne({

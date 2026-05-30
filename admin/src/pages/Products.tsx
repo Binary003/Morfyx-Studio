@@ -19,6 +19,7 @@ export function ProductsPage() {
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [categories, setCategories] = useState<string[]>([]);
@@ -48,6 +49,7 @@ export function ProductsPage() {
             const prodResponse = await adminApi.getProducts({
                 page: pageNum ?? pageRef.current,
                 limit: 20,
+                search: searchTerm.trim() || undefined,
                 ...(category !== undefined
                     ? (category !== "All" && { category: category.toLowerCase() })
                     : (categoryRef.current !== "All" && { category: categoryRef.current.toLowerCase() })
@@ -56,18 +58,23 @@ export function ProductsPage() {
 
             if (prodResponse.success && prodResponse.data?.items) {
                 setProducts(prodResponse.data.items);
+                const total = Number(prodResponse.data.total || 0);
+                const limit = 20;
+                setTotalPages(Math.max(1, Math.ceil(total / limit)));
             } else {
                 setProducts([]);
+                setTotalPages(1);
             }
         } catch (error) {
             console.error("Failed to fetch products:", error);
             setProducts([]);
+            setTotalPages(1);
         } finally {
             setLoading(false);
         }
     };
 
-    // Fetch on initial mount and when page/category changes
+    // Fetch on initial mount and when page/category/search changes
     useEffect(() => {
         fetchData(page, selectedCategory);
 
@@ -78,7 +85,7 @@ export function ProductsPage() {
         }, refreshInterval);
 
         return () => clearInterval(interval);
-    }, [page, selectedCategory]);
+    }, [page, selectedCategory, searchTerm]);
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this product?")) return;
@@ -92,10 +99,6 @@ export function ProductsPage() {
             alert("Failed to delete product");
         }
     };
-
-    const filteredProducts = searchTerm
-        ? products.filter(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
-        : products;
 
     return (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -116,7 +119,10 @@ export function ProductsPage() {
                         <Input
                             placeholder="Search products"
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
+                            onChange={(e) => {
+                                setSearchTerm(e.target.value);
+                                setPage(1);
+                            }}
                         />
                         <Select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
                             <option>All Categories</option>
@@ -152,14 +158,14 @@ export function ProductsPage() {
                                         <Skeleton className="h-8 w-full" />
                                     </TableCell>
                                 </TableRow>
-                            ) : filteredProducts.length === 0 ? (
+                            ) : products.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                         No products found
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                filteredProducts.map((product) => (
+                                products.map((product) => (
                                     <TableRow key={product.id}>
                                         <TableCell>
                                             <div className="font-semibold">{product.name}</div>
@@ -216,8 +222,8 @@ export function ProductsPage() {
 
             {!loading && (
                 <div className="mt-4 flex justify-between">
-                    <div className="text-xs text-muted-foreground">Showing {filteredProducts.length} products</div>
-                    <Pagination page={page} totalPages={10} />
+                    <div className="text-xs text-muted-foreground">Showing {products.length} products</div>
+                    <Pagination page={page} totalPages={totalPages} onChange={setPage} />
                 </div>
             )}
         </motion.div>
